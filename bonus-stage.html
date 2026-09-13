@@ -45,9 +45,9 @@ body {
 }
 
 
-/* ----------------------------
+/* =========================
    スコア
----------------------------- */
+========================= */
 
 .scoreBox {
   position: absolute;
@@ -56,6 +56,7 @@ body {
   padding: 10px 18px;
 
   color: white;
+
   font-size: clamp(18px, 2.3vw, 36px);
   font-weight: bold;
 
@@ -63,7 +64,7 @@ body {
     3px 3px 0 #000,
     -2px -2px 0 #000;
 
-  z-index: 100;
+  z-index: 200;
 }
 
 #p1ScoreBox {
@@ -76,15 +77,16 @@ body {
 }
 
 
-/* ----------------------------
+/* =========================
    タイマー
----------------------------- */
+========================= */
 
 #timer {
   position: absolute;
 
   top: 2%;
   left: 50%;
+
   transform: translateX(-50%);
 
   color: #fff34d;
@@ -96,13 +98,13 @@ body {
     3px 3px 0 #000,
     -2px -2px 0 #000;
 
-  z-index: 100;
+  z-index: 200;
 }
 
 
-/* ----------------------------
+/* =========================
    的
----------------------------- */
+========================= */
 
 .target {
   position: absolute;
@@ -110,7 +112,8 @@ body {
   width: 100px;
   height: 100px;
 
-  transform: translate(-50%, -50%) scale(0.25);
+  left: 50%;
+  top: 50%;
 
   border-radius: 50%;
 
@@ -118,22 +121,22 @@ body {
     radial-gradient(
       circle,
       #fff 0%,
-      #fff 22%,
-      #e62929 23%,
-      #e62929 43%,
-      #fff 44%,
-      #fff 62%,
-      #e62929 63%,
-      #e62929 100%
+      #fff 20%,
+      #e72828 21%,
+      #e72828 40%,
+      #fff 41%,
+      #fff 60%,
+      #e72828 61%,
+      #e72828 100%
     );
 
-  border: 5px solid #ffd339;
+  border: 5px solid #ffd83d;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  color: #159447;
+  color: #169b44;
 
   font-size: 24px;
   font-weight: 900;
@@ -142,16 +145,18 @@ body {
     1px 1px 0 white,
     -1px -1px 0 white;
 
-  z-index: 10;
-
   box-shadow:
-    0 4px 10px rgba(0,0,0,.55);
+    0 6px 10px rgba(0,0,0,.5);
+
+  transform-origin: center;
+
+  z-index: 20;
 }
 
 
-/* ----------------------------
+/* =========================
    照準
----------------------------- */
+========================= */
 
 .crosshair {
   position: absolute;
@@ -163,9 +168,9 @@ body {
 
   border-radius: 50%;
 
-  z-index: 200;
-
   pointer-events: none;
+
+  z-index: 500;
 }
 
 .crosshair::before,
@@ -213,9 +218,9 @@ body {
 }
 
 
-/* ----------------------------
-   命中時 +100
----------------------------- */
+/* =========================
+   +100
+========================= */
 
 .plusScore {
   position: absolute;
@@ -232,14 +237,16 @@ body {
 
   pointer-events: none;
 
-  z-index: 300;
+  z-index: 600;
 
-  animation: plusAnimation .55s forwards;
+  animation: plusAnimation .5s forwards;
 }
 
 @keyframes plusAnimation {
+
   0% {
     opacity: 1;
+
     transform:
       translate(-50%, -50%)
       scale(.8);
@@ -247,22 +254,24 @@ body {
 
   50% {
     transform:
-      translate(-50%, -85%)
-      scale(1.3);
+      translate(-50%, -90%)
+      scale(1.25);
   }
 
   100% {
     opacity: 0;
+
     transform:
-      translate(-50%, -130%)
+      translate(-50%, -140%)
       scale(1);
   }
+
 }
 
 
-/* ----------------------------
-   開始画面・終了画面
----------------------------- */
+/* =========================
+   START / FINISH
+========================= */
 
 .overlay {
   position: absolute;
@@ -276,9 +285,9 @@ body {
   justify-content: center;
   align-items: center;
 
-  z-index: 1000;
-
   color: white;
+
+  z-index: 1000;
 }
 
 .overlay h1 {
@@ -322,13 +331,16 @@ body {
 
 #finalScore {
   font-size: clamp(20px, 3vw, 46px);
+
   font-weight: bold;
+
   text-align: center;
+
   line-height: 1.7;
 }
+
 </style>
 </head>
-
 
 <body>
 
@@ -347,12 +359,10 @@ body {
   </div>
 
 
-  <!-- 照準 -->
   <div id="crosshair1" class="crosshair"></div>
   <div id="crosshair2" class="crosshair"></div>
 
 
-  <!-- START -->
   <div id="startScreen" class="overlay">
 
     <h1>BONUS!</h1>
@@ -368,7 +378,6 @@ body {
   </div>
 
 
-  <!-- FINISH -->
   <div id="finishScreen" class="overlay hidden">
 
     <h1>TIME UP!</h1>
@@ -386,50 +395,62 @@ body {
 
 <script>
 
-/* =====================================================
-   基本設定
-===================================================== */
+
+/* ==================================================
+   設定
+================================================== */
 
 const GAME_TIME = 15;
+
+
+/* 1枚の的の点数 */
 
 const TARGET_SCORE = 100;
 
 
 /*
- 的が新しく出る間隔
+  同じレーンで次の的が出るまでの時間
 
- 小さくするともっと大量に出る！
+  550ms = かなりたくさん
 
- 250 = かなり多め
- 180 = めちゃくちゃ多い
+  もっと大量なら
+  450
+
+  少し減らすなら
+  650
 */
-const SPAWN_INTERVAL = 240;
+
+const TARGET_INTERVAL = 550;
 
 
 /*
- 的が奥から手前に来るまでの時間
-
- 数字を小さくすると速くなる
+  奥から手前まで来る時間
 */
-const TARGET_TRAVEL_TIME = 3000;
+
+const TRAVEL_TIME = 2800;
 
 
 /*
- 照準速度
+  一番手前から下へ落ちる時間
 */
+
+const DROP_TIME = 430;
+
+
+/*
+  照準速度
+*/
+
 const CURSOR_SPEED = 900;
 
 
-/*
- スティックの遊び
-*/
 const DEADZONE = 0.12;
 
 
 
-/* =====================================================
+/* ==================================================
    HTML
-===================================================== */
+================================================== */
 
 const game =
   document.getElementById("game");
@@ -460,13 +481,14 @@ const finalScore =
 
 
 
-/* =====================================================
+/* ==================================================
    プレイヤー
-===================================================== */
+================================================== */
 
-let players = [
+const players = [
 
   {
+
     x: .42,
     y: .65,
 
@@ -475,15 +497,19 @@ let players = [
     axisX: 0,
     axisY: 1,
 
+    /* 左Joy-Con 下▼ */
+
     fireButton: 13,
 
     oldFire: false,
 
     crosshair: crosshair1
+
   },
 
 
   {
+
     x: .58,
     y: .65,
 
@@ -492,59 +518,87 @@ let players = [
     axisX: 2,
     axisY: 3,
 
+    /* 右Joy-Con X */
+
     fireButton: 2,
 
     oldFire: false,
 
     crosshair: crosshair2
+
   }
 
 ];
 
 
 
-/* =====================================================
-   レーン
+/* ==================================================
+   4本のレーン
+================================================== */
 
-   奥の位置 → 手前の位置
+/*
+  backX
+  → 奥にいるとき
 
-   背景画像に合わせて4レーン配置
-===================================================== */
+  frontX
+  → 一番手前
+
+  背景に合わせて位置を調整してある
+*/
 
 const lanes = [
 
   {
     backX: .255,
-    frontX: .225
+    frontX: .235
   },
 
   {
     backX: .415,
-    frontX: .395
+    frontX: .405
   },
 
   {
     backX: .585,
-    frontX: .605
+    frontX: .595
   },
 
   {
     backX: .745,
-    frontX: .775
+    frontX: .765
   }
 
 ];
 
 
-const BACK_Y = .50;
+/*
+  レール奥
+*/
 
-const FRONT_Y = .92;
+const BACK_Y = .51;
+
+
+/*
+  レール一番手前
+
+  ここまで来たら
+  次は下へ落ちる
+*/
+
+const FRONT_Y = .90;
+
+
+/*
+  落ちたあとの位置
+*/
+
+const DROP_Y = 1.12;
 
 
 
-/* =====================================================
+/* ==================================================
    ゲーム変数
-===================================================== */
+================================================== */
 
 let targets = [];
 
@@ -552,35 +606,64 @@ let playing = false;
 
 let startTime = 0;
 
-let lastSpawn = 0;
-
-let previousFrame = performance.now();
-
+let previousFrame =
+  performance.now();
 
 
-/* =====================================================
-   スタート
-===================================================== */
+/*
+  各レーンで
+  次に的を出す時間
+*/
+
+let nextSpawnTimes = [
+  0,
+  0,
+  0,
+  0
+];
+
+
+
+/* ==================================================
+   START
+================================================== */
 
 document
 .getElementById("startButton")
-.addEventListener("click", startGame);
+.addEventListener(
+  "click",
+  startGame
+);
 
 
 document
 .getElementById("retryButton")
-.addEventListener("click", startGame);
+.addEventListener(
+  "click",
+  startGame
+);
 
 
 
 function startGame() {
 
+  /*
+    古い的を全部消す
+  */
+
   targets.forEach(target => {
+
     target.element.remove();
+
   });
+
 
   targets = [];
 
+
+  /*
+    スコアリセット
+  */
 
   players[0].score = 0;
   players[1].score = 0;
@@ -589,6 +672,11 @@ function startGame() {
   score1Text.textContent = 0;
   score2Text.textContent = 0;
 
+
+
+  /*
+    照準位置
+  */
 
   players[0].x = .42;
   players[0].y = .65;
@@ -611,49 +699,120 @@ function startGame() {
 
   playing = true;
 
-  startTime = performance.now();
 
-  lastSpawn = startTime;
+  startTime =
+    performance.now();
+
+
+
+  /*
+    4レーンとも
+    一定間隔で出す
+  */
+
+  nextSpawnTimes = [
+    startTime,
+    startTime,
+    startTime,
+    startTime
+  ];
+
+
+
+  /*
+    最初からレール上に
+    的が何個か並んでいるようにする
+
+    これで開始直後も
+    スカスカにならない
+  */
+
+  createStartingTargets();
 
 }
 
 
 
-/* =====================================================
-   的を作る
-===================================================== */
+/* ==================================================
+   開始時に的を並べておく
+================================================== */
 
-function spawnTarget() {
+function createStartingTargets() {
 
-  const laneNumber =
-    Math.floor(Math.random() * 4);
+  /*
+    1レーンにつき4枚
+  */
+
+  const startingCount = 4;
 
 
-  const targetElement =
+  for (
+    let lane = 0;
+    lane < 4;
+    lane++
+  ) {
+
+    for (
+      let i = 0;
+      i < startingCount;
+      i++
+    ) {
+
+      /*
+        TARGET_INTERVAL分ずつ
+        年齢をずらす
+      */
+
+      const fakeBorn =
+        performance.now()
+        -
+        i * TARGET_INTERVAL;
+
+
+      spawnTarget(
+        lane,
+        fakeBorn
+      );
+
+    }
+
+  }
+
+}
+
+
+
+/* ==================================================
+   的生成
+================================================== */
+
+function spawnTarget(
+  laneNumber,
+  bornTime = performance.now()
+) {
+
+  const element =
     document.createElement("div");
 
 
-  targetElement.className =
+  element.className =
     "target";
 
 
-  targetElement.textContent =
+  element.textContent =
     "100";
 
 
-  game.appendChild(targetElement);
+  game.appendChild(element);
 
 
   const target = {
 
-    element:
-      targetElement,
+    element: element,
 
-    lane:
-      laneNumber,
+    lane: laneNumber,
 
-    born:
-      performance.now(),
+    born: bornTime,
 
     x:
       lanes[laneNumber].backX,
@@ -665,6 +824,9 @@ function spawnTarget() {
       .25,
 
     dead:
+      false,
+
+    dropping:
       false
 
   };
@@ -676,100 +838,285 @@ function spawnTarget() {
 
 
 
-/* =====================================================
+/* ==================================================
    的を動かす
-===================================================== */
+================================================== */
 
 function updateTargets(now) {
 
   targets.forEach(target => {
 
-    if (target.dead) return;
-
-
-    let progress =
-      (now - target.born)
-      / TARGET_TRAVEL_TIME;
-
-
-    if (progress >= 1) {
-
-      target.dead = true;
-
-      target.element.remove();
+    if (target.dead) {
 
       return;
 
     }
 
 
-    const lane =
-      lanes[target.lane];
-
-
     /*
-      奥 → 手前
+      生まれてから何秒経ったか
     */
 
-    target.x =
-      lane.backX
-      +
-      (
-        lane.frontX
-        -
+    const age =
+      now - target.born;
+
+
+
+    /* =========================================
+       ① レール上を進む
+    ========================================= */
+
+    if (
+      age <= TRAVEL_TIME
+    ) {
+
+      const progress =
+        age / TRAVEL_TIME;
+
+
+      const lane =
+        lanes[target.lane];
+
+
+
+      /*
+        奥 → 手前
+      */
+
+      target.x =
         lane.backX
-      )
-      *
-      progress;
+        +
+        (
+          lane.frontX
+          -
+          lane.backX
+        )
+        *
+        progress;
 
 
-    target.y =
-      BACK_Y
-      +
-      (
-        FRONT_Y
-        -
+
+      target.y =
         BACK_Y
-      )
-      *
-      progress;
+        +
+        (
+          FRONT_Y
+          -
+          BACK_Y
+        )
+        *
+        progress;
 
 
-    /*
-      手前ほど大きく
-    */
 
-    target.scale =
-      .22
-      +
-      progress * 1.05;
+      /*
+        手前ほど大きく
+      */
+
+      target.scale =
+        .22
+        +
+        progress * 1.03;
+
+
+
+      target.element.style.opacity =
+        "1";
+
+
+      target.element.style.transform =
+        `
+        translate(-50%, -50%)
+        scale(${target.scale})
+        rotate(0deg)
+        `;
+
+
+      target.element.style.zIndex =
+        20
+        +
+        Math.floor(
+          progress * 100
+        );
+
+    }
+
+
+
+    /* =========================================
+       ② レールの先で下へ落ちる
+    ========================================= */
+
+    else {
+
+      target.dropping = true;
+
+
+      const dropAge =
+        age
+        -
+        TRAVEL_TIME;
+
+
+      const dropProgress =
+        dropAge
+        /
+        DROP_TIME;
+
+
+
+      /*
+        落下終了
+      */
+
+      if (
+        dropProgress >= 1
+      ) {
+
+        target.dead = true;
+
+        target.element.remove();
+
+        return;
+
+      }
+
+
+
+      const lane =
+        lanes[target.lane];
+
+
+      /*
+        Xはほぼそのまま
+
+        少しだけ外側へ流すと
+        立体感が出る
+      */
+
+      const outward =
+        (
+          target.lane < 2
+          ? -1
+          : 1
+        );
+
+
+      target.x =
+        lane.frontX
+        +
+        outward
+        *
+        .015
+        *
+        dropProgress;
+
+
+
+      /*
+        下へ落下
+      */
+
+      target.y =
+        FRONT_Y
+        +
+        (
+          DROP_Y
+          -
+          FRONT_Y
+        )
+        *
+        dropProgress;
+
+
+
+      /*
+        少し小さくなる
+      */
+
+      target.scale =
+        1.25
+        -
+        .18
+        *
+        dropProgress;
+
+
+
+      /*
+        少し回転
+
+        トロッコの先から
+        ストンと落ちる感じ
+      */
+
+      const rotation =
+        outward
+        *
+        12
+        *
+        dropProgress;
+
+
+
+      /*
+        最後だけ少し透明に
+      */
+
+      let opacity = 1;
+
+
+      if (
+        dropProgress > .65
+      ) {
+
+        opacity =
+          1
+          -
+          (
+            dropProgress
+            -
+            .65
+          )
+          /
+          .35;
+
+      }
+
+
+
+      target.element.style.opacity =
+        opacity;
+
+
+      target.element.style.transform =
+        `
+        translate(-50%, -50%)
+        scale(${target.scale})
+        rotate(${rotation}deg)
+        `;
+
+
+      target.element.style.zIndex =
+        150;
+
+    }
+
 
 
     target.element.style.left =
-      (target.x * 100) + "%";
+      (target.x * 100)
+      +
+      "%";
 
 
     target.element.style.top =
-      (target.y * 100) + "%";
-
-
-    target.element.style.transform =
-      `
-      translate(-50%, -50%)
-      scale(${target.scale})
-      `;
-
-
-    /*
-      手前にある的ほど前に表示
-    */
-
-    target.element.style.zIndex =
-      10
+      (target.y * 100)
       +
-      Math.floor(progress * 80);
+      "%";
 
   });
+
 
 
   /*
@@ -785,16 +1132,57 @@ function updateTargets(now) {
 
 
 
-/* =====================================================
+/* ==================================================
+   一定間隔で的を生成
+================================================== */
+
+function updateSpawning(now) {
+
+  for (
+    let lane = 0;
+    lane < 4;
+    lane++
+  ) {
+
+    if (
+      now >=
+      nextSpawnTimes[lane]
+    ) {
+
+      spawnTarget(
+        lane
+      );
+
+
+      /*
+        ランダムじゃなく
+        必ず同じ間隔
+      */
+
+      nextSpawnTimes[lane]
+        +=
+        TARGET_INTERVAL;
+
+    }
+
+  }
+
+}
+
+
+
+/* ==================================================
    Joy-Con
-===================================================== */
+================================================== */
 
 function updateControllers(dt) {
 
   const gamepads =
     navigator.getGamepads
-    ? navigator.getGamepads()
-    : [];
+    ?
+    navigator.getGamepads()
+    :
+    [];
 
 
   const connected =
@@ -807,77 +1195,104 @@ function updateControllers(dt) {
     i++
   ) {
 
-    if (gamepads[i]) {
+    if (
+      gamepads[i]
+    ) {
 
-      connected.push(gamepads[i]);
+      connected.push(
+        gamepads[i]
+      );
 
     }
 
   }
 
 
-  /*
-    左Joy-Con / 右Joy-Con を探す
-  */
 
-  connected.forEach(gamepad => {
+  connected.forEach(
+    gamepad => {
 
-    const id =
-      gamepad.id.toLowerCase();
+      const id =
+        gamepad.id
+        .toLowerCase();
 
 
-    /*
-      Left Joy-Con
-    */
 
-    if (
-      id.includes("left")
-      ||
-      id.includes("joy-con (l)")
-    ) {
+      /*
+        LEFT
+      */
 
-      controlPlayer(
-        players[0],
-        gamepad,
-        dt
-      );
+      if (
+        id.includes("left")
+        ||
+        id.includes(
+          "joy-con (l)"
+        )
+      ) {
+
+        controlPlayer(
+          players[0],
+          gamepad,
+          dt
+        );
+
+      }
+
+
+
+      /*
+        RIGHT
+      */
+
+      else if (
+        id.includes("right")
+        ||
+        id.includes(
+          "joy-con (r)"
+        )
+      ) {
+
+        controlPlayer(
+          players[1],
+          gamepad,
+          dt
+        );
+
+      }
 
     }
 
+  );
 
-    /*
-      Right Joy-Con
-    */
-
-    else if (
-      id.includes("right")
-      ||
-      id.includes("joy-con (r)")
-    ) {
-
-      controlPlayer(
-        players[1],
-        gamepad,
-        dt
-      );
-
-    }
-
-  });
 
 
   /*
-    名前で左右判定できない場合
+    名前で判定できない場合
   */
 
-  if (connected.length >= 2) {
+  if (
+    connected.length >= 2
+  ) {
 
-    if (
-      !connected.some(
-        g =>
-          g.id.toLowerCase().includes("left")
-      )
-    ) {
+    const hasLeft =
+      connected.some(
+        gamepad =>
+          gamepad.id
+          .toLowerCase()
+          .includes("left")
+      );
+
+
+    const hasRight =
+      connected.some(
+        gamepad =>
+          gamepad.id
+          .toLowerCase()
+          .includes("right")
+      );
+
+
+    if (!hasLeft) {
 
       controlPlayer(
         players[0],
@@ -888,12 +1303,7 @@ function updateControllers(dt) {
     }
 
 
-    if (
-      !connected.some(
-        g =>
-          g.id.toLowerCase().includes("right")
-      )
-    ) {
+    if (!hasRight) {
 
       controlPlayer(
         players[1],
@@ -909,9 +1319,9 @@ function updateControllers(dt) {
 
 
 
-/* =====================================================
-   1人分のJoy-Con処理
-===================================================== */
+/* ==================================================
+   プレイヤー操作
+================================================== */
 
 function controlPlayer(
   player,
@@ -920,11 +1330,19 @@ function controlPlayer(
 ) {
 
   let axisX =
-    gamepad.axes[player.axisX] || 0;
+    gamepad.axes[
+      player.axisX
+    ]
+    ||
+    0;
 
 
   let axisY =
-    gamepad.axes[player.axisY] || 0;
+    gamepad.axes[
+      player.axisY
+    ]
+    ||
+    0;
 
 
 
@@ -955,6 +1373,7 @@ function controlPlayer(
     game.getBoundingClientRect();
 
 
+
   player.x +=
     axisX
     *
@@ -963,6 +1382,7 @@ function controlPlayer(
     dt
     /
     rect.width;
+
 
 
   player.y +=
@@ -979,21 +1399,23 @@ function controlPlayer(
   player.x =
     Math.max(
       .02,
-      Math.min(.98, player.x)
+      Math.min(
+        .98,
+        player.x
+      )
     );
 
 
   player.y =
     Math.max(
       .08,
-      Math.min(.96, player.y)
+      Math.min(
+        .96,
+        player.y
+      )
     );
 
 
-
-  /*
-    発射ボタン
-  */
 
   const button =
     gamepad.buttons[
@@ -1007,8 +1429,9 @@ function controlPlayer(
     button.pressed;
 
 
+
   /*
-    押した瞬間だけ発射
+    押した瞬間に発射
   */
 
   if (
@@ -1019,7 +1442,9 @@ function controlPlayer(
     playing
   ) {
 
-    shoot(player);
+    shoot(
+      player
+    );
 
   }
 
@@ -1031,15 +1456,16 @@ function controlPlayer(
 
 
 
-/* =====================================================
+/* ==================================================
    発射
-===================================================== */
+================================================== */
 
 function shoot(player) {
 
   let bestTarget = null;
 
-  let bestDistance = Infinity;
+  let bestDistance =
+    Infinity;
 
 
   const rect =
@@ -1047,32 +1473,53 @@ function shoot(player) {
 
 
   const playerX =
-    player.x * rect.width;
+    player.x
+    *
+    rect.width;
+
 
   const playerY =
-    player.y * rect.height;
+    player.y
+    *
+    rect.height;
 
 
 
   targets.forEach(target => {
 
-    if (target.dead) return;
+    if (
+      target.dead
+      ||
+      target.dropping
+    ) {
+
+      return;
+
+    }
 
 
     const targetX =
-      target.x * rect.width;
+      target.x
+      *
+      rect.width;
 
 
     const targetY =
-      target.y * rect.height;
+      target.y
+      *
+      rect.height;
 
 
     const dx =
-      playerX - targetX;
+      playerX
+      -
+      targetX;
 
 
     const dy =
-      playerY - targetY;
+      playerY
+      -
+      targetY;
 
 
     const distance =
@@ -1083,25 +1530,32 @@ function shoot(player) {
       );
 
 
+
     /*
-      的が手前に来るほど
-      当たり判定も大きくする
+      的の見た目に合わせて
+      当たり判定も拡大
     */
 
     const radius =
-      42
+      43
       *
       target.scale;
 
 
+
     if (
-      distance < radius
+      distance
+      <
+      radius
       &&
-      distance < bestDistance
+      distance
+      <
+      bestDistance
     ) {
 
       bestTarget =
         target;
+
 
       bestDistance =
         distance;
@@ -1112,19 +1566,25 @@ function shoot(player) {
 
 
 
-  if (!bestTarget) return;
+  if (
+    !bestTarget
+  ) {
+
+    return;
+
+  }
 
 
-  /*
-    得点
-  */
 
   player.score +=
     TARGET_SCORE;
 
 
+
   if (
-    player === players[0]
+    player
+    ===
+    players[0]
   ) {
 
     score1Text.textContent =
@@ -1141,19 +1601,12 @@ function shoot(player) {
 
 
 
-  /*
-    +100表示
-  */
-
   showPlus100(
     bestTarget.x,
     bestTarget.y
   );
 
 
-  /*
-    的を消す
-  */
 
   bestTarget.dead = true;
 
@@ -1163,14 +1616,19 @@ function shoot(player) {
 
 
 
-/* =====================================================
-   +100
-===================================================== */
+/* ==================================================
+   +100表示
+================================================== */
 
-function showPlus100(x, y) {
+function showPlus100(
+  x,
+  y
+) {
 
   const plus =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
 
   plus.className =
@@ -1182,81 +1640,121 @@ function showPlus100(x, y) {
 
 
   plus.style.left =
-    (x * 100) + "%";
+    (x * 100)
+    +
+    "%";
 
 
   plus.style.top =
-    (y * 100) + "%";
+    (y * 100)
+    +
+    "%";
 
 
-  game.appendChild(plus);
+  game.appendChild(
+    plus
+  );
 
 
-  setTimeout(() => {
+  setTimeout(
+    () => {
 
-    plus.remove();
+      plus.remove();
 
-  }, 600);
+    },
+
+    550
+
+  );
 
 }
 
 
 
-/* =====================================================
-   照準表示
-===================================================== */
+/* ==================================================
+   照準
+================================================== */
 
 function updateCrosshairs() {
 
-  players.forEach(player => {
+  players.forEach(
+    player => {
 
-    player.crosshair.style.left =
-      (player.x * 100) + "%";
+      player.crosshair
+      .style.left =
+        (
+          player.x
+          *
+          100
+        )
+        +
+        "%";
 
 
-    player.crosshair.style.top =
-      (player.y * 100) + "%";
+      player.crosshair
+      .style.top =
+        (
+          player.y
+          *
+          100
+        )
+        +
+        "%";
 
-  });
+    }
+
+  );
 
 }
 
 
 
-/* =====================================================
-   キーボードテスト
+/* ==================================================
+   Macテスト用
 
    P1 = Space
    P2 = Enter
-
-   MacでJoy-Conなしでも確認できる
-===================================================== */
+================================================== */
 
 document.addEventListener(
   "keydown",
   event => {
 
-    if (!playing) return;
-
-
     if (
-      event.code === "Space"
-      &&
-      !event.repeat
+      !playing
     ) {
 
-      shoot(players[0]);
+      return;
 
     }
 
 
     if (
-      event.code === "Enter"
+      event.code
+      ===
+      "Space"
       &&
       !event.repeat
     ) {
 
-      shoot(players[1]);
+      shoot(
+        players[0]
+      );
+
+    }
+
+
+    if (
+      event.code
+      ===
+      "Enter"
+      &&
+      !event.repeat
+    ) {
+
+      shoot(
+        players[1]
+      );
 
     }
 
@@ -1265,17 +1763,21 @@ document.addEventListener(
 
 
 
-/* =====================================================
+/* ==================================================
    マウステスト
-
-   左クリック = P1
-===================================================== */
+================================================== */
 
 game.addEventListener(
   "mousemove",
   event => {
 
-    if (!playing) return;
+    if (
+      !playing
+    ) {
+
+      return;
+
+    }
 
 
     const rect =
@@ -1305,13 +1807,18 @@ game.addEventListener(
 );
 
 
+
 game.addEventListener(
   "mousedown",
   () => {
 
-    if (playing) {
+    if (
+      playing
+    ) {
 
-      shoot(players[0]);
+      shoot(
+        players[0]
+      );
 
     }
 
@@ -1320,23 +1827,27 @@ game.addEventListener(
 
 
 
-/* =====================================================
-   ゲーム終了
-===================================================== */
+/* ==================================================
+   終了
+================================================== */
 
 function finishGame() {
 
   playing = false;
 
 
-  targets.forEach(target => {
 
-    target.element.remove();
+  targets.forEach(
+    target => {
 
-  });
+      target.element.remove();
+
+    }
+  );
 
 
   targets = [];
+
 
 
   const total =
@@ -1345,33 +1856,45 @@ function finishGame() {
     players[1].score;
 
 
+
   finalScore.innerHTML =
     `
     P1 BONUS：${players[0].score} 点
     <br>
+
     P2 BONUS：${players[1].score} 点
     <br><br>
+
     TOTAL：${total} 点
     `;
 
 
   finishScreen
     .classList
-    .remove("hidden");
+    .remove(
+      "hidden"
+    );
 
 }
 
 
 
-/* =====================================================
+/* ==================================================
    メインループ
-===================================================== */
+================================================== */
 
 function gameLoop(now) {
 
   const dt =
     Math.min(
-      (now - previousFrame) / 1000,
+      (
+        now
+        -
+        previousFrame
+      )
+      /
+      1000,
+
       .05
     );
 
@@ -1380,71 +1903,65 @@ function gameLoop(now) {
     now;
 
 
-  /*
-    Joy-Conはゲーム中じゃなくても取得
 
-    → 照準が滑らかになる
-  */
+  updateControllers(
+    dt
+  );
 
-  updateControllers(dt);
 
   updateCrosshairs();
 
 
 
-  if (playing) {
+  if (
+    playing
+  ) {
 
     const elapsed =
-      (now - startTime)
+      (
+        now
+        -
+        startTime
+      )
       /
       1000;
+
 
 
     const remaining =
       Math.max(
         0,
-        GAME_TIME - elapsed
+        GAME_TIME
+        -
+        elapsed
       );
 
 
+
     timerText.textContent =
-      remaining.toFixed(1);
+      remaining
+      .toFixed(1);
 
 
 
     /*
-      的をどんどん追加
+      一定間隔で
+      4レーンに追加
     */
 
-    if (
-      now - lastSpawn
-      >=
-      SPAWN_INTERVAL
-    ) {
-
-      spawnTarget();
-
-      /*
-        ときどき同時に2個出す
-      */
-
-      if (
-        Math.random() < .35
-      ) {
-
-        spawnTarget();
-
-      }
-
-
-      lastSpawn =
-        now;
-
-    }
+    updateSpawning(
+      now
+    );
 
 
 
-    updateTargets(now);
+    /*
+      的を前進
+    */
+
+    updateTargets(
+      now
+    );
 
 
 
@@ -1459,11 +1976,13 @@ function gameLoop(now) {
   }
 
 
+
   requestAnimationFrame(
     gameLoop
   );
 
 }
+
 
 
 requestAnimationFrame(
