@@ -148,59 +148,43 @@
 
 
 
-    /* =========================
-       的
-    ========================= */
+/* =========================
+   的（画像版）
+========================= */
 
-    .target {
+.target {
 
-      position: absolute;
+  position: absolute;
 
-      width: 100px;
-      height: 100px;
+  width: 100px;
+  height: 100px;
 
-      margin-left: -50px;
-      margin-top: -50px;
+  margin-left: -50px;
+  margin-top: -50px;
 
-      border-radius: 50%;
+  background-image: url("target.png");
 
-      background:
-        radial-gradient(
-          circle,
-          #ffe65c 0%,
-          #ffe65c 17%,
-          #e53935 18%,
-          #e53935 35%,
-          white 36%,
-          white 53%,
-          #e53935 54%,
-          #e53935 72%,
-          white 73%
-        );
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
 
-      border: 5px solid #55351e;
+  border: none;
+  border-radius: 0;
 
-      box-shadow:
-        0 4px 6px rgba(0, 0, 0, .5),
-        inset 0 0 8px rgba(0, 0, 0, .3);
+  box-shadow: none;
 
-      color: #542715;
+  color: transparent;
 
-      font-size: 21px;
+  display: block;
 
-      font-weight: 900;
+  user-select: none;
 
-      display: flex;
+  pointer-events: none;
 
-      justify-content: center;
-      align-items: center;
+  z-index: 50;
 
-      user-select: none;
-
-      z-index: 50;
-
-      transform-origin: center;
-    }
+  transform-origin: center;
+}
 
 
 
@@ -1053,10 +1037,6 @@ function createTarget(
 
   element.className =
     "target";
-
-
-  element.textContent =
-    "100";
 
 
   game.appendChild(
