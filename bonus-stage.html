@@ -1261,6 +1261,14 @@ function updateOneTarget(
       *
       progress;
 
+      const zIndex =
+  Math.floor(
+    100 + progress * 1000
+  );
+
+target.element.style.zIndex =
+  zIndex;
+
 
 
     /*
