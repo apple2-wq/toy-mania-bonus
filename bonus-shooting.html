@@ -620,7 +620,7 @@ const GAME_TIME = 15;
 
 
 /* 的の間隔 */
-const TARGET_INTERVAL = 750;
+const TARGET_INTERVAL = 500;
 
 
 /* 普通の的 */
@@ -653,6 +653,136 @@ const CURSOR_SPEED = 1200;
 
 /* スティックのブレ防止 */
 const DEADZONE = 0.12;
+
+
+/* ==========================================
+   効果音
+   音声ファイル不要！
+========================================== */
+
+const audioContext =
+  new (window.AudioContext ||
+       window.webkitAudioContext)();
+
+
+function playHitSound(score) {
+
+  if (audioContext.state === "suspended") {
+    audioContext.resume();
+  }
+
+
+  const now = audioContext.currentTime;
+
+
+  /* =====================
+     1000点 レア的
+  ===================== */
+
+  if (score === 1000) {
+
+    const notes = [
+      880,
+      1100,
+      1320
+    ];
+
+    notes.forEach((frequency, i) => {
+
+      const oscillator =
+        audioContext.createOscillator();
+
+      const gain =
+        audioContext.createGain();
+
+
+      oscillator.type = "sine";
+
+      oscillator.frequency.value =
+        frequency;
+
+
+      gain.gain.setValueAtTime(
+        0.18,
+        now + i * 0.06
+      );
+
+      gain.gain.exponentialRampToValueAtTime(
+        0.001,
+        now + 0.20 + i * 0.06
+      );
+
+
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+
+
+      oscillator.start(
+        now + i * 0.06
+      );
+
+      oscillator.stop(
+        now + 0.22 + i * 0.06
+      );
+
+    });
+
+  }
+
+
+  /* =====================
+     100点 普通の的
+  ===================== */
+
+  else {
+
+    const oscillator =
+      audioContext.createOscillator();
+
+    const gain =
+      audioContext.createGain();
+
+
+    oscillator.type = "triangle";
+
+    oscillator.frequency.setValueAtTime(
+      420,
+      now
+    );
+
+    oscillator.frequency.exponentialRampToValueAtTime(
+      230,
+      now + 0.09
+    );
+
+
+    gain.gain.setValueAtTime(
+      0.20,
+      now
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+      0.001,
+      now + 0.10
+    );
+
+
+    oscillator.connect(gain);
+
+    gain.connect(
+      audioContext.destination
+    );
+
+
+    oscillator.start(now);
+
+    oscillator.stop(
+      now + 0.11
+    );
+
+  }
+
+}
 
 
 /*
@@ -2133,11 +2263,12 @@ function hitTarget(
     true;
 
 
-  player.score +=
-    target.score;
+player.score += target.score;
 
+updateScores();
 
-  updateScores();
+/* 命中したときの効果音 */
+playHitSound(target.score);
 
 
 
