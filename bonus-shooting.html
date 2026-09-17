@@ -1,0 +1,2454 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=no"
+  >
+
+  <title>Bonus Stage</title>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: black;
+      font-family: Arial, sans-serif;
+    }
+
+
+    /* =========================
+       ゲーム
+    ========================= */
+
+    #game {
+      position: relative;
+
+      width: 100vw;
+      height: 100vh;
+
+      overflow: hidden;
+
+      background-image: url("bonus-bg.png");
+      background-size: 100% 100%;
+      background-position: center;
+      background-repeat: no-repeat;
+
+      cursor: none;
+    }
+
+
+    /* =========================
+       HUD
+    ========================= */
+
+    #hud {
+      position: absolute;
+
+      top: 15px;
+      left: 0;
+
+      width: 100%;
+
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      padding: 0 35px;
+
+      z-index: 5000;
+
+      pointer-events: none;
+    }
+
+
+    .scoreBox {
+      padding: 8px 18px;
+
+      font-size: 30px;
+      font-weight: bold;
+
+      background: rgba(0, 0, 0, .65);
+
+      border: 3px solid white;
+      border-radius: 15px;
+
+      text-shadow:
+        2px 2px 3px black;
+    }
+
+
+    #score1 {
+      color: #55eaff;
+
+      box-shadow:
+        0 0 14px #55eaff;
+    }
+
+
+    #score2 {
+      color: #ff6bba;
+
+      box-shadow:
+        0 0 14px #ff6bba;
+    }
+
+
+    #timer {
+      padding: 8px 20px;
+
+      font-size: 34px;
+      font-weight: bold;
+
+      color: #ffe76a;
+
+      background: rgba(0, 0, 0, .65);
+
+      border: 3px solid white;
+      border-radius: 15px;
+
+      text-shadow:
+        2px 2px 4px black;
+    }
+
+
+
+    /* =========================
+       普通の的
+       100点
+    ========================= */
+
+    .target {
+      position: absolute;
+
+      width: 100px;
+      height: 100px;
+
+      margin-left: -50px;
+      margin-top: -50px;
+
+      border-radius: 50%;
+
+      background:
+        radial-gradient(
+          circle,
+          #ffe65c 0%,
+          #ffe65c 17%,
+          #e53935 18%,
+          #e53935 35%,
+          white 36%,
+          white 53%,
+          #e53935 54%,
+          #e53935 72%,
+          white 73%
+        );
+
+      border: 5px solid #55351e;
+
+      box-shadow:
+        0 4px 6px rgba(0, 0, 0, .5),
+        inset 0 0 8px rgba(0, 0, 0, .3);
+
+      color: #542715;
+
+      font-size: 21px;
+      font-weight: 900;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      user-select: none;
+
+      transform-origin: center;
+    }
+
+
+
+    /* =========================
+       レア的
+       target.png
+       1000点
+    ========================= */
+
+    .target.specialTarget {
+      background: transparent;
+
+      background-image: url("target.png");
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
+
+      border: none;
+      border-radius: 0;
+
+      box-shadow: none;
+
+      color: transparent;
+    }
+
+
+
+    /* =========================
+       照準
+    ========================= */
+
+    .crosshair {
+      position: absolute;
+
+      transform: translate(-50%, -50%);
+
+      font-size: 65px;
+      font-weight: bold;
+
+      line-height: 1;
+
+      pointer-events: none;
+      user-select: none;
+
+      z-index: 6000;
+    }
+
+
+    /* 右Joy-Con / PLAYER 1 */
+
+    #crosshair1 {
+      left: 40%;
+      top: 55%;
+
+      color: #55eaff;
+
+      text-shadow:
+        0 0 4px black,
+        0 0 10px #55eaff,
+        0 0 18px #55eaff;
+    }
+
+
+    /* 左Joy-Con / PLAYER 2 */
+
+    #crosshair2 {
+      left: 60%;
+      top: 55%;
+
+      color: #ff6bba;
+
+      text-shadow:
+        0 0 4px black,
+        0 0 10px #ff6bba,
+        0 0 18px #ff6bba;
+    }
+
+
+
+    /* =========================
+       +得点
+    ========================= */
+
+    .plusScore {
+      position: absolute;
+
+      transform: translate(-50%, -50%);
+
+      font-size: 34px;
+      font-weight: 900;
+
+      color: #fff36b;
+
+      text-shadow:
+        0 0 4px black,
+        0 0 8px black;
+
+      pointer-events: none;
+
+      z-index: 7000;
+
+      animation:
+        plusAnimation .65s forwards;
+    }
+
+
+    .plusScore.special {
+      font-size: 48px;
+
+      color: #ffe135;
+
+      text-shadow:
+        0 0 5px black,
+        0 0 12px #ff9d00,
+        0 0 20px #ffe135;
+    }
+
+
+    @keyframes plusAnimation {
+
+      0% {
+        opacity: 1;
+
+        transform:
+          translate(-50%, -50%)
+          scale(.8);
+      }
+
+      100% {
+        opacity: 0;
+
+        transform:
+          translate(-50%, -110%)
+          scale(1.3);
+      }
+
+    }
+
+
+
+    /* =========================
+       最初の登録画面
+    ========================= */
+
+    #setupScreen {
+      position: absolute;
+
+      inset: 0;
+
+      display: flex;
+
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      gap: 18px;
+
+      background:
+        rgba(0, 0, 0, .72);
+
+      color: white;
+
+      text-align: center;
+
+      z-index: 10000;
+    }
+
+
+    #setupScreen h1 {
+      font-size: 55px;
+
+      color: #ffe35a;
+
+      text-shadow:
+        3px 3px 0 #7f351d;
+    }
+
+
+    #setupMessage {
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+
+    #setupStatus {
+      font-size: 22px;
+      line-height: 1.7;
+    }
+
+
+    #startButton {
+      display: none;
+
+      margin-top: 15px;
+
+      padding: 14px 45px;
+
+      font-size: 28px;
+      font-weight: bold;
+
+      color: white;
+
+      background: #d94b28;
+
+      border: 4px solid white;
+      border-radius: 18px;
+
+      cursor: pointer;
+    }
+
+
+
+    /* =========================
+       結果画面
+    ========================= */
+
+    #resultScreen {
+      position: absolute;
+
+      inset: 0;
+
+      display: none;
+
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      gap: 18px;
+
+      background:
+        rgba(0, 0, 0, .75);
+
+      color: white;
+
+      text-align: center;
+
+      z-index: 11000;
+    }
+
+
+    #resultScreen h1 {
+      font-size: 58px;
+
+      color: #ffe35a;
+    }
+
+
+    .resultScore {
+      font-size: 35px;
+      font-weight: bold;
+    }
+
+
+    #resultP1 {
+      color: #55eaff;
+    }
+
+
+    #resultP2 {
+      color: #ff6bba;
+    }
+
+
+    #totalScore {
+      font-size: 45px;
+      font-weight: 900;
+
+      color: #fff36b;
+    }
+
+
+    #restartButton {
+      padding: 13px 35px;
+
+      font-size: 24px;
+      font-weight: bold;
+
+      color: white;
+
+      background: #d94b28;
+
+      border: 3px solid white;
+      border-radius: 15px;
+
+      cursor: pointer;
+    }
+
+  </style>
+</head>
+
+
+
+<body>
+
+<div id="game">
+
+
+  <!-- スコア -->
+
+  <div id="hud">
+
+    <div
+      id="score1"
+      class="scoreBox"
+    >
+      P1 : 0
+    </div>
+
+
+    <div id="timer">
+      15.0
+    </div>
+
+
+    <div
+      id="score2"
+      class="scoreBox"
+    >
+      P2 : 0
+    </div>
+
+  </div>
+
+
+
+  <!-- 照準 -->
+
+  <div
+    id="crosshair1"
+    class="crosshair"
+  >
+    ＋
+  </div>
+
+
+  <div
+    id="crosshair2"
+    class="crosshair"
+  >
+    ＋
+  </div>
+
+
+
+  <!-- Joy-Con登録 -->
+
+  <div id="setupScreen">
+
+    <h1>
+      BONUS STAGE
+    </h1>
+
+
+    <div id="setupMessage">
+      🩵 右Joy-Conの ZR を押してね
+    </div>
+
+
+    <div id="setupStatus">
+      🩵 PLAYER 1：未登録<br>
+      🩷 PLAYER 2：未登録
+    </div>
+
+
+    <button id="startButton">
+      START
+    </button>
+
+  </div>
+
+
+
+  <!-- 結果 -->
+
+  <div id="resultScreen">
+
+    <h1>
+      BONUS FINISH!
+    </h1>
+
+
+    <div
+      id="resultP1"
+      class="resultScore"
+    ></div>
+
+
+    <div
+      id="resultP2"
+      class="resultScore"
+    ></div>
+
+
+    <div id="totalScore"></div>
+
+
+    <button id="restartButton">
+      もう一度
+    </button>
+
+  </div>
+
+
+</div>
+
+
+
+<script>
+
+
+/* ==========================================
+   ゲーム設定
+========================================== */
+
+
+const GAME_TIME = 15;
+
+
+/* 的の間隔 */
+const TARGET_INTERVAL = 750;
+
+
+/* 普通の的 */
+const NORMAL_SCORE = 100;
+
+
+/* レア的 */
+const SPECIAL_SCORE = 1000;
+
+
+/*
+  レア的の確率
+
+  0.10 = 10%
+*/
+const SPECIAL_CHANCE = 0.10;
+
+
+/* 奥から手前まで */
+const TRAVEL_TIME = 2800;
+
+
+/* 落下時間 */
+const DROP_TIME = 430;
+
+
+/* 照準感度 */
+const CURSOR_SPEED = 1200;
+
+
+/* スティックのブレ防止 */
+const DEADZONE = 0.12;
+
+
+/*
+  ZR / ZL
+
+  今回確認した番号
+*/
+const RIGHT_SHOOT_BUTTON = 7;
+
+const LEFT_SHOOT_BUTTON = 6;
+
+
+
+/* ==========================================
+   レーン
+========================================== */
+
+
+const lanes = [
+
+  {
+    backX: .255,
+    frontX: .235
+  },
+
+  {
+    backX: .415,
+    frontX: .405
+  },
+
+  {
+    backX: .585,
+    frontX: .595
+  },
+
+  {
+    backX: .745,
+    frontX: .765
+  }
+
+];
+
+
+/*
+  出てくる位置
+
+  小さくするとさらに奥
+*/
+const BACK_Y = .45;
+
+
+/*
+  落ち始める位置
+*/
+const FRONT_Y = .76;
+
+
+/*
+  落ちた後の位置
+*/
+const DROP_Y = 1.02;
+
+
+
+/* ==========================================
+   HTML
+========================================== */
+
+
+const game =
+  document.getElementById("game");
+
+
+const score1Text =
+  document.getElementById("score1");
+
+
+const score2Text =
+  document.getElementById("score2");
+
+
+const timerText =
+  document.getElementById("timer");
+
+
+const crosshair1 =
+  document.getElementById("crosshair1");
+
+
+const crosshair2 =
+  document.getElementById("crosshair2");
+
+
+const setupScreen =
+  document.getElementById("setupScreen");
+
+
+const setupMessage =
+  document.getElementById("setupMessage");
+
+
+const setupStatus =
+  document.getElementById("setupStatus");
+
+
+const startButton =
+  document.getElementById("startButton");
+
+
+const resultScreen =
+  document.getElementById("resultScreen");
+
+
+const resultP1 =
+  document.getElementById("resultP1");
+
+
+const resultP2 =
+  document.getElementById("resultP2");
+
+
+const totalScore =
+  document.getElementById("totalScore");
+
+
+const restartButton =
+  document.getElementById("restartButton");
+
+
+
+/* ==========================================
+   PLAYER
+========================================== */
+
+
+const players = [
+
+  {
+    x: .40,
+    y: .55,
+
+    score: 0,
+
+    crosshair: crosshair1,
+
+    oldFire: false
+  },
+
+  {
+    x: .60,
+    y: .55,
+
+    score: 0,
+
+    crosshair: crosshair2,
+
+    oldFire: false
+  }
+
+];
+
+
+
+/* ==========================================
+   Joy-Con登録
+========================================== */
+
+
+let rightJoyConIndex = null;
+
+let leftJoyConIndex = null;
+
+
+let setupStep = 0;
+
+
+let previousSetupButtons = {};
+
+
+
+/*
+  Joy-Conのどのボタンが
+  新しく押されたか調べる
+*/
+
+function getNewPressedButton(
+  pad
+) {
+
+  if (!pad) {
+    return null;
+  }
+
+
+  for (
+    let i = 0;
+    i < pad.buttons.length;
+    i++
+  ) {
+
+    const key =
+      pad.index + "-" + i;
+
+
+    const pressed =
+      pad.buttons[i].pressed;
+
+
+    const oldPressed =
+      previousSetupButtons[key]
+      || false;
+
+
+    previousSetupButtons[key] =
+      pressed;
+
+
+    if (
+      pressed
+      &&
+      !oldPressed
+    ) {
+
+      return i;
+
+    }
+
+  }
+
+
+  return null;
+
+}
+
+
+
+/*
+  最初の登録画面
+*/
+
+function setupLoop() {
+
+
+  if (
+    setupStep >= 2
+  ) {
+
+    return;
+
+  }
+
+
+  const pads =
+
+    Array
+      .from(
+        navigator.getGamepads
+          ?
+          navigator.getGamepads()
+          :
+          []
+      )
+      .filter(Boolean);
+
+
+
+  for (
+    const pad of pads
+  ) {
+
+
+    const button =
+      getNewPressedButton(pad);
+
+
+
+    if (
+      button === null
+    ) {
+
+      continue;
+
+    }
+
+
+
+    /* =========================
+       STEP 1
+
+       右Joy-Con
+       ZR
+    ========================= */
+
+    if (
+      setupStep === 0
+      &&
+      button === RIGHT_SHOOT_BUTTON
+    ) {
+
+
+      rightJoyConIndex =
+        pad.index;
+
+
+      setupStep = 1;
+
+
+      previousSetupButtons = {};
+
+
+      setupMessage.textContent =
+        "🩷 左Joy-Conの ZL を押してね";
+
+
+      setupStatus.innerHTML =
+
+        "🩵 PLAYER 1：登録OK！<br>"
+        +
+        "🩷 PLAYER 2：未登録";
+
+
+      break;
+
+    }
+
+
+
+    /* =========================
+       STEP 2
+
+       左Joy-Con
+       ZL
+    ========================= */
+
+    if (
+      setupStep === 1
+      &&
+      button === LEFT_SHOOT_BUTTON
+      &&
+      pad.index !== rightJoyConIndex
+    ) {
+
+
+      leftJoyConIndex =
+        pad.index;
+
+
+      setupStep = 2;
+
+
+      setupMessage.textContent =
+        "2人とも登録できたよ！";
+
+
+      setupStatus.innerHTML =
+
+        "🩵 PLAYER 1：右Joy-Con ZR ✓<br>"
+        +
+        "🩷 PLAYER 2：左Joy-Con ZL ✓";
+
+
+      startButton.style.display =
+        "block";
+
+
+      break;
+
+    }
+
+  }
+
+
+  requestAnimationFrame(
+    setupLoop
+  );
+
+}
+
+
+
+/* ==========================================
+   ゲーム状態
+========================================== */
+
+
+let playing = false;
+
+let startTime = 0;
+
+let previousFrame = 0;
+
+let targets = [];
+
+
+let nextSpawnTimes = [
+  0,
+  0,
+  0,
+  0
+];
+
+
+
+/* ==========================================
+   START
+========================================== */
+
+
+function startGame() {
+
+
+  for (
+    const target of targets
+  ) {
+
+    target.element.remove();
+
+  }
+
+
+  targets = [];
+
+
+  players[0].score = 0;
+
+  players[1].score = 0;
+
+
+  players[0].x = .40;
+  players[0].y = .55;
+
+
+  players[1].x = .60;
+  players[1].y = .55;
+
+
+  players[0].oldFire = false;
+
+  players[1].oldFire = false;
+
+
+  updateScores();
+
+  updateCrosshairs();
+
+
+  setupScreen.style.display =
+    "none";
+
+
+  resultScreen.style.display =
+    "none";
+
+
+  timerText.textContent =
+    GAME_TIME.toFixed(1);
+
+
+  playing = true;
+
+
+  startTime =
+    performance.now();
+
+
+  previousFrame =
+    startTime;
+
+
+  createStartingTargets();
+
+
+  /*
+    最初の的と
+    新しい的が重ならないようにする
+  */
+
+  for (
+    let i = 0;
+    i < lanes.length;
+    i++
+  ) {
+
+    nextSpawnTimes[i] =
+      startTime
+      +
+      TARGET_INTERVAL;
+
+  }
+
+
+  requestAnimationFrame(
+    gameLoop
+  );
+
+}
+
+
+
+/* ==========================================
+   最初から並んでいる的
+========================================== */
+
+
+function createStartingTargets() {
+
+
+  const startingCount = 4;
+
+
+  const now =
+    performance.now();
+
+
+  for (
+    let laneIndex = 0;
+    laneIndex < lanes.length;
+    laneIndex++
+  ) {
+
+
+    for (
+      let i = 0;
+      i < startingCount;
+      i++
+    ) {
+
+
+      const fakeBorn =
+
+        now
+        -
+        i
+        *
+        TARGET_INTERVAL;
+
+
+      createTarget(
+        laneIndex,
+        fakeBorn
+      );
+
+    }
+
+  }
+
+}
+
+
+
+/* ==========================================
+   的を作る
+========================================== */
+
+
+function createTarget(
+  laneIndex,
+  bornTime = performance.now()
+) {
+
+
+  if (!playing) {
+    return;
+  }
+
+
+  const element =
+    document.createElement("div");
+
+
+
+  /*
+    10%の確率で
+    target.png
+  */
+
+  const isSpecial =
+
+    Math.random()
+    <
+    SPECIAL_CHANCE;
+
+
+
+  if (
+    isSpecial
+  ) {
+
+    element.className =
+      "target specialTarget";
+
+
+    element.textContent =
+      "";
+
+  }
+
+  else {
+
+    element.className =
+      "target";
+
+
+    element.textContent =
+      "100";
+
+  }
+
+
+
+  game.appendChild(
+    element
+  );
+
+
+
+  const target = {
+
+    element,
+
+    laneIndex,
+
+    bornTime,
+
+    dropping: false,
+
+    dropStart: 0,
+
+    dropX: 0,
+
+    hit: false,
+
+    special: isSpecial,
+
+    score:
+      isSpecial
+        ?
+        SPECIAL_SCORE
+        :
+        NORMAL_SCORE
+
+  };
+
+
+  targets.push(
+    target
+  );
+
+
+  updateOneTarget(
+    target,
+    performance.now()
+  );
+
+}
+
+
+
+/* ==========================================
+   的を追加
+========================================== */
+
+
+function updateSpawning(now) {
+
+
+  for (
+    let laneIndex = 0;
+    laneIndex < lanes.length;
+    laneIndex++
+  ) {
+
+
+    while (
+      now
+      >=
+      nextSpawnTimes[laneIndex]
+    ) {
+
+
+      createTarget(
+        laneIndex,
+        nextSpawnTimes[laneIndex]
+      );
+
+
+      nextSpawnTimes[laneIndex] +=
+        TARGET_INTERVAL;
+
+    }
+
+  }
+
+}
+
+
+
+/* ==========================================
+   的を更新
+========================================== */
+
+
+function updateTargets(now) {
+
+
+  const copy =
+    [...targets];
+
+
+  for (
+    const target of copy
+  ) {
+
+    updateOneTarget(
+      target,
+      now
+    );
+
+  }
+
+}
+
+
+
+/* ==========================================
+   的1個の移動
+========================================== */
+
+
+function updateOneTarget(
+  target,
+  now
+) {
+
+
+  if (
+    target.hit
+  ) {
+
+    return;
+
+  }
+
+
+  const lane =
+    lanes[target.laneIndex];
+
+
+
+  /* =========================
+     奥 → 手前
+  ========================= */
+
+  if (
+    !target.dropping
+  ) {
+
+
+    let progress =
+
+      (
+        now
+        -
+        target.bornTime
+      )
+      /
+      TRAVEL_TIME;
+
+
+
+    if (
+      progress >= 1
+    ) {
+
+
+      progress = 1;
+
+
+      target.dropping =
+        true;
+
+
+      target.dropStart =
+        now;
+
+
+      target.dropX =
+        lane.frontX;
+
+    }
+
+
+
+    const x =
+
+      lane.backX
+      +
+      (
+        lane.frontX
+        -
+        lane.backX
+      )
+      *
+      progress;
+
+
+
+    const y =
+
+      BACK_Y
+      +
+      (
+        FRONT_Y
+        -
+        BACK_Y
+      )
+      *
+      progress;
+
+
+
+    /*
+      手前ほど大きい
+    */
+
+    const scale =
+
+      .22
+      +
+      1.03
+      *
+      progress;
+
+
+
+    /*
+      ★重要
+
+      手前の的ほど
+      上のレイヤー
+    */
+
+    const zIndex =
+
+      Math.floor(
+        100
+        +
+        progress
+        *
+        1000
+      );
+
+
+
+    target.element.style.left =
+      `${x * 100}%`;
+
+
+    target.element.style.top =
+      `${y * 100}%`;
+
+
+    target.element.style.transform =
+      `scale(${scale})`;
+
+
+    target.element.style.zIndex =
+      zIndex;
+
+
+    target.element.style.opacity =
+      "1";
+
+
+    return;
+
+  }
+
+
+
+  /* =========================
+     手前で落下
+  ========================= */
+
+
+  let dropProgress =
+
+    (
+      now
+      -
+      target.dropStart
+    )
+    /
+    DROP_TIME;
+
+
+
+  if (
+    dropProgress >= 1
+  ) {
+
+
+    removeTarget(
+      target
+    );
+
+
+    return;
+
+  }
+
+
+
+  const direction =
+
+    target.laneIndex < 2
+      ?
+      -1
+      :
+      1;
+
+
+
+  const x =
+
+    target.dropX
+    +
+    direction
+    *
+    .018
+    *
+    dropProgress;
+
+
+
+  const y =
+
+    FRONT_Y
+    +
+    (
+      DROP_Y
+      -
+      FRONT_Y
+    )
+    *
+    dropProgress;
+
+
+
+  const rotation =
+
+    direction
+    *
+    12
+    *
+    dropProgress;
+
+
+
+  const scale =
+
+    1.25
+    +
+    .12
+    *
+    dropProgress;
+
+
+
+  let opacity = 1;
+
+
+  if (
+    dropProgress > .65
+  ) {
+
+
+    opacity =
+
+      1
+      -
+      (
+        dropProgress
+        -
+        .65
+      )
+      /
+      .35;
+
+  }
+
+
+
+  target.element.style.left =
+    `${x * 100}%`;
+
+
+  target.element.style.top =
+    `${y * 100}%`;
+
+
+  target.element.style.transform =
+
+    `scale(${scale})
+     rotate(${rotation}deg)`;
+
+
+  target.element.style.opacity =
+    opacity;
+
+
+  target.element.style.zIndex =
+    1200;
+
+}
+
+
+
+/* ==========================================
+   的削除
+========================================== */
+
+
+function removeTarget(target) {
+
+
+  const index =
+    targets.indexOf(target);
+
+
+  if (
+    index !== -1
+  ) {
+
+    targets.splice(
+      index,
+      1
+    );
+
+  }
+
+
+  target.element.remove();
+
+}
+
+
+
+/* ==========================================
+   照準
+========================================== */
+
+
+function updateCrosshairs() {
+
+
+  for (
+    const player of players
+  ) {
+
+
+    player.crosshair.style.left =
+      `${player.x * 100}%`;
+
+
+    player.crosshair.style.top =
+      `${player.y * 100}%`;
+
+  }
+
+}
+
+
+
+/* ==========================================
+   スティック
+========================================== */
+
+
+function cleanAxis(value) {
+
+
+  if (
+    Math.abs(value)
+    <
+    DEADZONE
+  ) {
+
+    return 0;
+
+  }
+
+
+  const sign =
+    Math.sign(value);
+
+
+  const amount =
+
+    (
+      Math.abs(value)
+      -
+      DEADZONE
+    )
+    /
+    (
+      1
+      -
+      DEADZONE
+    );
+
+
+  return (
+    sign
+    *
+    amount
+  );
+
+}
+
+
+
+/* ==========================================
+   Joy-Con操作
+========================================== */
+
+
+function controlRightJoyCon(
+  pad,
+  deltaTime
+) {
+
+
+  if (!pad) {
+    return;
+  }
+
+
+  const player =
+    players[0];
+
+
+  /*
+    右Joy-Con
+    axes 2 / 3
+  */
+
+  const x =
+    cleanAxis(
+      pad.axes[2]
+      ??
+      0
+    );
+
+
+  const y =
+    cleanAxis(
+      pad.axes[3]
+      ??
+      0
+    );
+
+
+  movePlayer(
+    player,
+    x,
+    y,
+    deltaTime
+  );
+
+
+  checkFire(
+    player,
+    pad,
+    RIGHT_SHOOT_BUTTON
+  );
+
+}
+
+
+
+function controlLeftJoyCon(
+  pad,
+  deltaTime
+) {
+
+
+  if (!pad) {
+    return;
+  }
+
+
+  const player =
+    players[1];
+
+
+  /*
+    左Joy-Con
+    axes 0 / 1
+  */
+
+  const x =
+    cleanAxis(
+      pad.axes[0]
+      ??
+      0
+    );
+
+
+  const y =
+    cleanAxis(
+      pad.axes[1]
+      ??
+      0
+    );
+
+
+  movePlayer(
+    player,
+    x,
+    y,
+    deltaTime
+  );
+
+
+  checkFire(
+    player,
+    pad,
+    LEFT_SHOOT_BUTTON
+  );
+
+}
+
+
+
+/* ==========================================
+   照準移動
+========================================== */
+
+
+function movePlayer(
+  player,
+  axisX,
+  axisY,
+  deltaTime
+) {
+
+
+  player.x +=
+
+    axisX
+    *
+    CURSOR_SPEED
+    *
+    deltaTime
+    /
+    game.clientWidth;
+
+
+
+  player.y +=
+
+    axisY
+    *
+    CURSOR_SPEED
+    *
+    deltaTime
+    /
+    game.clientHeight;
+
+
+
+  player.x =
+
+    Math.max(
+      .02,
+      Math.min(
+        .98,
+        player.x
+      )
+    );
+
+
+  player.y =
+
+    Math.max(
+      .06,
+      Math.min(
+        .98,
+        player.y
+      )
+    );
+
+}
+
+
+
+/* ==========================================
+   発射
+========================================== */
+
+
+function checkFire(
+  player,
+  pad,
+  buttonNumber
+) {
+
+
+  const button =
+    pad.buttons[
+      buttonNumber
+    ];
+
+
+  const fire =
+
+    button
+      ?
+      button.pressed
+      :
+      false;
+
+
+  if (
+    fire
+    &&
+    !player.oldFire
+  ) {
+
+    shoot(
+      player
+    );
+
+  }
+
+
+  player.oldFire =
+    fire;
+
+}
+
+
+
+/* ==========================================
+   命中判定
+========================================== */
+
+
+function shoot(player) {
+
+
+  if (!playing) {
+    return;
+  }
+
+
+  const gameRect =
+    game.getBoundingClientRect();
+
+
+
+  const cursorX =
+
+    gameRect.left
+    +
+    player.x
+    *
+    gameRect.width;
+
+
+
+  const cursorY =
+
+    gameRect.top
+    +
+    player.y
+    *
+    gameRect.height;
+
+
+
+  /*
+    ★ z-indexが高い順
+
+    つまり
+    一番手前の的から判定
+  */
+
+  const targetCopy =
+
+    [...targets]
+      .filter(
+        target =>
+          !target.hit
+          &&
+          !target.dropping
+      )
+      .sort(
+        (a, b) => {
+
+          const az =
+            Number(
+              a.element.style.zIndex
+            )
+            ||
+            0;
+
+
+          const bz =
+            Number(
+              b.element.style.zIndex
+            )
+            ||
+            0;
+
+
+          return bz - az;
+
+        }
+      );
+
+
+
+  for (
+    const target of targetCopy
+  ) {
+
+
+    const rect =
+
+      target.element
+        .getBoundingClientRect();
+
+
+
+    if (
+
+      cursorX >= rect.left
+      &&
+      cursorX <= rect.right
+      &&
+      cursorY >= rect.top
+      &&
+      cursorY <= rect.bottom
+
+    ) {
+
+
+      hitTarget(
+        player,
+        target
+      );
+
+
+      return;
+
+    }
+
+  }
+
+}
+
+
+
+/* ==========================================
+   HIT
+========================================== */
+
+
+function hitTarget(
+  player,
+  target
+) {
+
+
+  target.hit =
+    true;
+
+
+  player.score +=
+    target.score;
+
+
+  updateScores();
+
+
+
+  const plus =
+
+    document.createElement(
+      "div"
+    );
+
+
+  plus.className =
+    target.special
+      ?
+      "plusScore special"
+      :
+      "plusScore";
+
+
+  plus.textContent =
+    `+${target.score}`;
+
+
+
+  const rect =
+
+    target.element
+      .getBoundingClientRect();
+
+
+  const gameRect =
+
+    game.getBoundingClientRect();
+
+
+
+  plus.style.left =
+
+    `${
+      rect.left
+      -
+      gameRect.left
+      +
+      rect.width / 2
+    }px`;
+
+
+
+  plus.style.top =
+
+    `${
+      rect.top
+      -
+      gameRect.top
+      +
+      rect.height / 2
+    }px`;
+
+
+
+  game.appendChild(
+    plus
+  );
+
+
+  setTimeout(
+    () => plus.remove(),
+    700
+  );
+
+
+  removeTarget(
+    target
+  );
+
+}
+
+
+
+/* ==========================================
+   スコア
+========================================== */
+
+
+function updateScores() {
+
+
+  score1Text.textContent =
+    `P1 : ${players[0].score}`;
+
+
+  score2Text.textContent =
+    `P2 : ${players[1].score}`;
+
+}
+
+
+
+/* ==========================================
+   ゲームループ
+========================================== */
+
+
+function gameLoop(now) {
+
+
+  if (!playing) {
+    return;
+  }
+
+
+
+  let deltaTime =
+
+    (
+      now
+      -
+      previousFrame
+    )
+    /
+    1000;
+
+
+  previousFrame =
+    now;
+
+
+  deltaTime =
+    Math.min(
+      deltaTime,
+      .05
+    );
+
+
+
+  const elapsed =
+
+    (
+      now
+      -
+      startTime
+    )
+    /
+    1000;
+
+
+
+  const remaining =
+
+    GAME_TIME
+    -
+    elapsed;
+
+
+
+  if (
+    remaining <= 0
+  ) {
+
+
+    timerText.textContent =
+      "0.0";
+
+
+    endGame();
+
+
+    return;
+
+  }
+
+
+
+  timerText.textContent =
+    remaining.toFixed(1);
+
+
+
+  const pads =
+    navigator.getGamepads
+      ?
+      navigator.getGamepads()
+      :
+      [];
+
+
+
+  /*
+    登録した右Joy-Con
+  */
+
+  const rightPad =
+
+    rightJoyConIndex !== null
+      ?
+      pads[rightJoyConIndex]
+      :
+      null;
+
+
+
+  /*
+    登録した左Joy-Con
+  */
+
+  const leftPad =
+
+    leftJoyConIndex !== null
+      ?
+      pads[leftJoyConIndex]
+      :
+      null;
+
+
+
+  controlRightJoyCon(
+    rightPad,
+    deltaTime
+  );
+
+
+  controlLeftJoyCon(
+    leftPad,
+    deltaTime
+  );
+
+
+  updateCrosshairs();
+
+
+  updateSpawning(
+    now
+  );
+
+
+  updateTargets(
+    now
+  );
+
+
+  requestAnimationFrame(
+    gameLoop
+  );
+
+}
+
+
+
+/* ==========================================
+   終了
+========================================== */
+
+
+function endGame() {
+
+
+  playing =
+    false;
+
+
+  for (
+    const target of targets
+  ) {
+
+    target.element.remove();
+
+  }
+
+
+  targets = [];
+
+
+
+  resultP1.textContent =
+
+    `🩵 P1 BONUS：${players[0].score}点`;
+
+
+
+  resultP2.textContent =
+
+    `🩷 P2 BONUS：${players[1].score}点`;
+
+
+
+  const total =
+
+    players[0].score
+    +
+    players[1].score;
+
+
+
+  totalScore.textContent =
+
+    `TOTAL：${total}点`;
+
+
+
+  resultScreen.style.display =
+    "flex";
+
+}
+
+
+
+/* ==========================================
+   ボタン
+========================================== */
+
+
+startButton.addEventListener(
+  "click",
+  startGame
+);
+
+
+restartButton.addEventListener(
+  "click",
+  startGame
+);
+
+
+
+/* ==========================================
+   最初
+========================================== */
+
+
+updateCrosshairs();
+
+
+requestAnimationFrame(
+  setupLoop
+);
+
+
+</script>
+
+</body>
+
+</html>
