@@ -564,12 +564,75 @@ const NORMAL_SCORE = 500;
 const SPECIAL_SCORE = 1000;
 
 
+
 /*
-  スペシャルは10%
-  約10個に1個
+  的は全部で128個
+
+  通常 500点 × 116個
+  顔 1000点 × 12個
+
+  合計 70,000点
 */
 
-const SPECIAL_CHANCE = 0.10;
+const NORMAL_TARGET_COUNT = 116;
+const SPECIAL_TARGET_COUNT = 12;
+
+let targetDeck = [];
+
+
+/* 的128個を作ってランダムに並べる */
+
+function makeTargetDeck() {
+
+  targetDeck = [];
+
+  /* 通常500点を116個 */
+
+  for (
+    let i = 0;
+    i < NORMAL_TARGET_COUNT;
+    i++
+  ) {
+
+    targetDeck.push(false);
+  }
+
+
+  /* 顔1000点を12個 */
+
+  for (
+    let i = 0;
+    i < SPECIAL_TARGET_COUNT;
+    i++
+  ) {
+
+    targetDeck.push(true);
+  }
+
+
+  /* 順番をシャッフル */
+
+  for (
+    let i = targetDeck.length - 1;
+    i > 0;
+    i--
+  ) {
+
+    const j =
+      Math.floor(
+        Math.random() * (i + 1)
+      );
+
+
+    [
+      targetDeck[i],
+      targetDeck[j]
+    ] = [
+      targetDeck[j],
+      targetDeck[i]
+    ];
+  }
+}
 
 
 /* 的の移動時間 */
@@ -1083,6 +1146,8 @@ function startGame() {
   players[0].score = 0;
   players[1].score = 0;
 
+  makeTargetDeck();
+
 
   /* 照準位置 */
 
@@ -1211,14 +1276,18 @@ function createTarget(
     );
 
 
-  /*
-    約10個に1個が
-    スペシャル
-  */
 
-  const isSpecial =
-    Math.random() <
-    SPECIAL_CHANCE;
+/*
+  用意した128個から
+  順番に1個取り出す
+*/
+
+if (targetDeck.length === 0) {
+  return;
+}
+
+const isSpecial =
+  targetDeck.shift();
 
 
   if (isSpecial) {
