@@ -1,0 +1,2233 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+<title>Bonus Stage 2</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  font-family: Arial, sans-serif;
+}
+
+#game {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+
+  background-image: url("bonus-bg.png");
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  cursor: none;
+}
+
+/* =========================
+   スコア
+========================= */
+
+#hud {
+  position: absolute;
+  top: 15px;
+  left: 0;
+  width: 100%;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 0 35px;
+
+  z-index: 5000;
+  pointer-events: none;
+}
+
+.scoreBox {
+  padding: 8px 18px;
+
+  font-size: 30px;
+  font-weight: bold;
+
+  background: rgba(0,0,0,.65);
+  border: 3px solid white;
+  border-radius: 15px;
+
+  text-shadow: 2px 2px 3px black;
+}
+
+#score1 {
+  color: #55eaff;
+  box-shadow: 0 0 14px #55eaff;
+}
+
+#score2 {
+  color: #ff6bba;
+  box-shadow: 0 0 14px #ff6bba;
+}
+
+#timer {
+  padding: 8px 20px;
+
+  font-size: 34px;
+  font-weight: bold;
+
+  color: #ffe76a;
+
+  background: rgba(0,0,0,.65);
+  border: 3px solid white;
+  border-radius: 15px;
+
+  text-shadow: 2px 2px 4px black;
+}
+
+
+/* =========================
+   通常の的 100点
+========================= */
+
+.target {
+  position: absolute;
+
+  width: 130px;
+  height: 130px;
+
+  margin-left: -65px;
+  margin-top: -65px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      #ffe65c 0%,
+      #ffe65c 17%,
+      #e53935 18%,
+      #e53935 35%,
+      white 36%,
+      white 53%,
+      #e53935 54%,
+      #e53935 72%,
+      white 73%
+    );
+
+  border: 5px solid #55351e;
+
+  box-shadow:
+    0 4px 6px rgba(0,0,0,.5),
+    inset 0 0 8px rgba(0,0,0,.3);
+
+  color: #542715;
+
+  font-size: 25px;
+  font-weight: 900;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  user-select: none;
+  pointer-events: none;
+
+  transform-origin: center;
+}
+
+
+/* =========================
+   レア的 1000点
+========================= */
+
+.target.specialTarget {
+  background: transparent;
+  background-image: url("target.png");
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  border: none;
+  border-radius: 0;
+
+  box-shadow: none;
+  color: transparent;
+
+  filter:
+    drop-shadow(0 0 6px white)
+    drop-shadow(0 0 12px #ffe45c)
+    drop-shadow(0 0 20px #ffb300);
+
+  animation: rareSparkle .45s infinite alternate;
+}
+
+@keyframes rareSparkle {
+  0% {
+    filter:
+      drop-shadow(0 0 4px white)
+      drop-shadow(0 0 8px #ffe45c)
+      drop-shadow(0 0 12px #ffb300);
+  }
+
+  100% {
+    filter:
+      drop-shadow(0 0 8px white)
+      drop-shadow(0 0 18px #fff36b)
+      drop-shadow(0 0 28px #ffb300);
+  }
+}
+
+
+/* =========================
+   照準
+========================= */
+
+.crosshair {
+  position: absolute;
+
+  transform: translate(-50%, -50%);
+
+  font-size: 65px;
+  font-weight: bold;
+  line-height: 1;
+
+  pointer-events: none;
+  user-select: none;
+
+  z-index: 6000;
+}
+
+/* P1 = ZR */
+#crosshair1 {
+  left: 40%;
+  top: 55%;
+
+  color: #55eaff;
+
+  text-shadow:
+    0 0 4px black,
+    0 0 10px #55eaff,
+    0 0 18px #55eaff;
+}
+
+/* P2 = ZL */
+#crosshair2 {
+  left: 60%;
+  top: 55%;
+
+  color: #ff6bba;
+
+  text-shadow:
+    0 0 4px black,
+    0 0 10px #ff6bba,
+    0 0 18px #ff6bba;
+}
+
+
+/* =========================
+   +100 / +1000
+========================= */
+
+.plusScore {
+  position: absolute;
+
+  transform: translate(-50%, -50%);
+
+  font-size: 36px;
+  font-weight: 900;
+
+  color: #fff36b;
+
+  text-shadow:
+    0 0 4px black,
+    0 0 8px black;
+
+  pointer-events: none;
+
+  z-index: 7000;
+
+  animation: plusAnimation .65s forwards;
+}
+
+.plusScore.special {
+  font-size: 50px;
+
+  color: #ffe135;
+
+  text-shadow:
+    0 0 5px black,
+    0 0 12px #ff9d00,
+    0 0 20px #ffe135;
+}
+
+@keyframes plusAnimation {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(.8);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -120%) scale(1.3);
+  }
+}
+
+
+/* =========================
+   最初の画面
+========================= */
+
+#setupScreen {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  background: rgba(0,0,0,.70);
+
+  color: white;
+  text-align: center;
+
+  z-index: 10000;
+}
+
+#setupScreen h1 {
+  font-size: 60px;
+  color: #ffe35a;
+
+  text-shadow:
+    4px 4px 0 #7f351d,
+    0 0 16px #ffae00;
+
+  margin-bottom: 18px;
+}
+
+#setupMessage {
+  font-size: 27px;
+  font-weight: bold;
+
+  margin-bottom: 25px;
+}
+
+.controllerStatus {
+  width: 420px;
+  max-width: 90vw;
+
+  padding: 15px 20px;
+  margin: 7px;
+
+  font-size: 24px;
+  font-weight: bold;
+
+  background: rgba(0,0,0,.55);
+
+  border-radius: 16px;
+}
+
+#p1Status {
+  color: #55eaff;
+  border: 3px solid #55eaff;
+}
+
+#p2Status {
+  color: #ff6bba;
+  border: 3px solid #ff6bba;
+}
+
+#readyMessage {
+  height: 40px;
+
+  margin-top: 18px;
+
+  font-size: 28px;
+  font-weight: 900;
+
+  color: #fff36b;
+}
+
+#startButton {
+  display: none;
+
+  margin-top: 12px;
+  padding: 14px 50px;
+
+  font-size: 30px;
+  font-weight: bold;
+
+  color: white;
+
+  background: #d94b28;
+
+  border: 4px solid white;
+  border-radius: 18px;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 0 15px #ff9d00;
+}
+
+
+/* =========================
+   終了画面
+========================= */
+
+#resultScreen {
+  position: absolute;
+  inset: 0;
+
+  display: none;
+
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  gap: 18px;
+
+  background: rgba(0,0,0,.78);
+
+  color: white;
+  text-align: center;
+
+  z-index: 11000;
+}
+
+#resultScreen h1 {
+  font-size: 60px;
+  color: #ffe35a;
+}
+
+.resultScore {
+  font-size: 36px;
+  font-weight: bold;
+}
+
+#resultP1 {
+  color: #55eaff;
+}
+
+#resultP2 {
+  color: #ff6bba;
+}
+
+#totalScore {
+  font-size: 48px;
+  font-weight: 900;
+
+  color: #fff36b;
+}
+
+#restartButton {
+  margin-top: 15px;
+
+  padding: 13px 35px;
+
+  font-size: 24px;
+  font-weight: bold;
+
+  color: white;
+
+  background: #d94b28;
+
+  border: 3px solid white;
+  border-radius: 15px;
+
+  cursor: pointer;
+}
+</style>
+</head>
+
+
+<body>
+
+<div id="game">
+
+  <!-- スコア -->
+
+  <div id="hud">
+
+    <div id="score1" class="scoreBox">
+      P1 : 0
+    </div>
+
+    <div id="timer">
+      15.0
+    </div>
+
+    <div id="score2" class="scoreBox">
+      P2 : 0
+    </div>
+
+  </div>
+
+
+  <!-- 照準 -->
+
+  <div id="crosshair1" class="crosshair">
+    ＋
+  </div>
+
+  <div id="crosshair2" class="crosshair">
+    ＋
+  </div>
+
+
+  <!-- 最初の画面 -->
+
+  <div id="setupScreen">
+
+    <h1>
+      BONUS STAGE
+    </h1>
+
+    <div id="setupMessage">
+      ZR・ZLを押してJoy-Conを登録してね！<br>
+      どっちから押してもOK！
+    </div>
+
+    <div id="p1Status" class="controllerStatus">
+      🩵 P1 / ZR：未登録
+    </div>
+
+    <div id="p2Status" class="controllerStatus">
+      🩷 P2 / ZL：未登録
+    </div>
+
+    <div id="readyMessage">
+    </div>
+
+    <button id="startButton">
+      START
+    </button>
+
+  </div>
+
+
+  <!-- 結果画面 -->
+
+  <div id="resultScreen">
+
+    <h1>
+      BONUS FINISH!
+    </h1>
+
+    <div id="resultP1" class="resultScore"></div>
+
+    <div id="resultP2" class="resultScore"></div>
+
+    <div id="totalScore"></div>
+
+    <button id="restartButton">
+      もう一度
+    </button>
+
+  </div>
+
+</div>
+
+
+<script>
+
+/* =========================================
+   設定
+========================================= */
+
+const GAME_TIME = 15;
+
+/* 的が出る間隔 */
+const TARGET_INTERVAL = 500;
+
+/* 点数 */
+const NORMAL_SCORE = 100;
+const SPECIAL_SCORE = 1000;
+
+/* target.png が出る確率 10% */
+const SPECIAL_CHANCE = 0.10;
+
+/* 的の移動 */
+const TRAVEL_TIME = 2800;
+const DROP_TIME = 430;
+
+/* 照準 */
+const CURSOR_SPEED = 1200;
+const DEADZONE = 0.12;
+
+
+/*
+  Gamepad API上のZR/ZL。
+
+  登録時は「押されたボタン」も確認するので、
+  Joy-Conの接続順そのものには依存しない。
+*/
+const ZR_BUTTON = 7;
+const ZL_BUTTON = 6;
+
+
+/* =========================================
+   レーン
+========================================= */
+
+const lanes = [
+  {
+    backX: .255,
+    frontX: .235
+  },
+
+  {
+    backX: .415,
+    frontX: .405
+  },
+
+  {
+    backX: .585,
+    frontX: .595
+  },
+
+  {
+    backX: .745,
+    frontX: .765
+  }
+];
+
+
+/* 的の奥の位置 */
+const BACK_Y = .45;
+
+/* 落ち始める位置 */
+const FRONT_Y = .76;
+
+/* 落ちていく位置 */
+const DROP_Y = 1.02;
+
+
+/* =========================================
+   HTML
+========================================= */
+
+const game =
+  document.getElementById("game");
+
+const score1Text =
+  document.getElementById("score1");
+
+const score2Text =
+  document.getElementById("score2");
+
+const timerText =
+  document.getElementById("timer");
+
+const crosshair1 =
+  document.getElementById("crosshair1");
+
+const crosshair2 =
+  document.getElementById("crosshair2");
+
+const setupScreen =
+  document.getElementById("setupScreen");
+
+const p1Status =
+  document.getElementById("p1Status");
+
+const p2Status =
+  document.getElementById("p2Status");
+
+const readyMessage =
+  document.getElementById("readyMessage");
+
+const startButton =
+  document.getElementById("startButton");
+
+const resultScreen =
+  document.getElementById("resultScreen");
+
+const resultP1 =
+  document.getElementById("resultP1");
+
+const resultP2 =
+  document.getElementById("resultP2");
+
+const totalScore =
+  document.getElementById("totalScore");
+
+const restartButton =
+  document.getElementById("restartButton");
+
+
+/* =========================================
+   PLAYER
+========================================= */
+
+const players = [
+  {
+    x: .40,
+    y: .55,
+
+    score: 0,
+
+    crosshair: crosshair1,
+
+    oldFire: false
+  },
+
+  {
+    x: .60,
+    y: .55,
+
+    score: 0,
+
+    crosshair: crosshair2,
+
+    oldFire: false
+  }
+];
+
+
+/* =========================================
+   Joy-Con登録
+========================================= */
+
+/*
+  ここに「その回に登録されたGamepad番号」を保存。
+
+  接続順が変わっても、
+  最初の画面で再登録する。
+*/
+
+let rightJoyConIndex = null;
+let leftJoyConIndex = null;
+
+
+/*
+  ボタンを押しっぱなしにした時に
+  何回も登録されないようにする。
+*/
+
+const setupButtonStates = new Map();
+
+
+function getSetupButtonState(pad, buttonNumber) {
+
+  const key =
+    `${pad.index}-${buttonNumber}`;
+
+  return setupButtonStates.get(key) || false;
+}
+
+
+function setSetupButtonState(
+  pad,
+  buttonNumber,
+  value
+) {
+
+  const key =
+    `${pad.index}-${buttonNumber}`;
+
+  setupButtonStates.set(
+    key,
+    value
+  );
+}
+
+
+/*
+  ZR/ZL登録
+*/
+
+function setupControllers() {
+
+  const pads =
+    navigator.getGamepads
+      ? Array.from(navigator.getGamepads())
+      : [];
+
+
+  for (const pad of pads) {
+
+    if (!pad) {
+      continue;
+    }
+
+
+    /* -------------------------
+       ZR → P1
+    ------------------------- */
+
+    const zrPressed =
+      !!pad.buttons[ZR_BUTTON]?.pressed;
+
+    const oldZR =
+      getSetupButtonState(
+        pad,
+        ZR_BUTTON
+      );
+
+
+    if (
+      zrPressed &&
+      !oldZR &&
+      rightJoyConIndex === null &&
+      pad.index !== leftJoyConIndex
+    ) {
+
+      rightJoyConIndex =
+        pad.index;
+
+      p1Status.textContent =
+        "🩵 P1 / ZR：登録OK！ ✓";
+    }
+
+
+    setSetupButtonState(
+      pad,
+      ZR_BUTTON,
+      zrPressed
+    );
+
+
+    /* -------------------------
+       ZL → P2
+    ------------------------- */
+
+    const zlPressed =
+      !!pad.buttons[ZL_BUTTON]?.pressed;
+
+    const oldZL =
+      getSetupButtonState(
+        pad,
+        ZL_BUTTON
+      );
+
+
+    if (
+      zlPressed &&
+      !oldZL &&
+      leftJoyConIndex === null &&
+      pad.index !== rightJoyConIndex
+    ) {
+
+      leftJoyConIndex =
+        pad.index;
+
+      p2Status.textContent =
+        "🩷 P2 / ZL：登録OK！ ✓";
+    }
+
+
+    setSetupButtonState(
+      pad,
+      ZL_BUTTON,
+      zlPressed
+    );
+  }
+
+
+  /*
+    両方登録された！
+  */
+
+  if (
+    rightJoyConIndex !== null &&
+    leftJoyConIndex !== null
+  ) {
+
+    readyMessage.textContent =
+      "READY！";
+
+    startButton.style.display =
+      "block";
+  }
+
+
+  requestAnimationFrame(
+    setupControllers
+  );
+}
+
+
+/* =========================================
+   ゲーム状態
+========================================= */
+
+let playing = false;
+
+let startTime = 0;
+let previousFrame = 0;
+
+let targets = [];
+
+let nextSpawnTimes = [
+  0,
+  0,
+  0,
+  0
+];
+
+
+/* =========================================
+   効果音
+   音源ファイル不要
+========================================= */
+
+let audioContext = null;
+
+
+function getAudioContext() {
+
+  if (!audioContext) {
+
+    audioContext =
+      new (
+        window.AudioContext ||
+        window.webkitAudioContext
+      )();
+  }
+
+  if (
+    audioContext.state === "suspended"
+  ) {
+    audioContext.resume();
+  }
+
+  return audioContext;
+}
+
+
+/*
+  普通の100点
+*/
+
+function playNormalHitSound() {
+
+  const ctx =
+    getAudioContext();
+
+  const now =
+    ctx.currentTime;
+
+  const oscillator =
+    ctx.createOscillator();
+
+  const gain =
+    ctx.createGain();
+
+
+  oscillator.type =
+    "triangle";
+
+
+  oscillator.frequency.setValueAtTime(
+    430,
+    now
+  );
+
+  oscillator.frequency.exponentialRampToValueAtTime(
+    230,
+    now + .09
+  );
+
+
+  gain.gain.setValueAtTime(
+    .20,
+    now
+  );
+
+  gain.gain.exponentialRampToValueAtTime(
+    .001,
+    now + .11
+  );
+
+
+  oscillator.connect(gain);
+  gain.connect(ctx.destination);
+
+  oscillator.start(now);
+  oscillator.stop(now + .12);
+}
+
+
+/*
+  1000点のキラキラ音
+*/
+
+function playSpecialHitSound() {
+
+  const ctx =
+    getAudioContext();
+
+  const now =
+    ctx.currentTime;
+
+
+  const notes = [
+    880,
+    1100,
+    1320
+  ];
+
+
+  notes.forEach(
+    (frequency, index) => {
+
+      const oscillator =
+        ctx.createOscillator();
+
+      const gain =
+        ctx.createGain();
+
+
+      oscillator.type =
+        "sine";
+
+
+      oscillator.frequency.value =
+        frequency;
+
+
+      const noteStart =
+        now + index * .06;
+
+
+      gain.gain.setValueAtTime(
+        .18,
+        noteStart
+      );
+
+      gain.gain.exponentialRampToValueAtTime(
+        .001,
+        noteStart + .20
+      );
+
+
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+
+
+      oscillator.start(
+        noteStart
+      );
+
+      oscillator.stop(
+        noteStart + .21
+      );
+    }
+  );
+}
+
+
+/* =========================================
+   START
+========================================= */
+
+function startGame() {
+
+  /*
+    STARTクリックで
+    ブラウザの音を有効化
+  */
+
+  getAudioContext();
+
+
+  for (const target of targets) {
+    target.element.remove();
+  }
+
+  targets = [];
+
+
+  players[0].score = 0;
+  players[1].score = 0;
+
+
+  players[0].x = .40;
+  players[0].y = .55;
+
+  players[1].x = .60;
+  players[1].y = .55;
+
+
+  players[0].oldFire = false;
+  players[1].oldFire = false;
+
+
+  updateScores();
+  updateCrosshairs();
+
+
+  setupScreen.style.display =
+    "none";
+
+  resultScreen.style.display =
+    "none";
+
+
+  timerText.textContent =
+    GAME_TIME.toFixed(1);
+
+
+  playing = true;
+
+
+  startTime =
+    performance.now();
+
+  previousFrame =
+    startTime;
+
+
+  /*
+    最初から各レーンに
+    的を並べておく
+  */
+
+  createStartingTargets();
+
+
+  for (
+    let i = 0;
+    i < lanes.length;
+    i++
+  ) {
+
+    nextSpawnTimes[i] =
+      startTime + TARGET_INTERVAL;
+  }
+
+
+  requestAnimationFrame(
+    gameLoop
+  );
+}
+
+
+/* =========================================
+   最初の的
+========================================= */
+
+function createStartingTargets() {
+
+  const startingCount = 4;
+
+  const now =
+    performance.now();
+
+
+  for (
+    let laneIndex = 0;
+    laneIndex < lanes.length;
+    laneIndex++
+  ) {
+
+    for (
+      let i = 0;
+      i < startingCount;
+      i++
+    ) {
+
+      /*
+        500msずつずらして
+        最初からレール上に並べる
+      */
+
+      const fakeBorn =
+        now -
+        i * TARGET_INTERVAL;
+
+
+      createTarget(
+        laneIndex,
+        fakeBorn
+      );
+    }
+  }
+}
+
+
+/* =========================================
+   的生成
+========================================= */
+
+function createTarget(
+  laneIndex,
+  bornTime = performance.now()
+) {
+
+  if (!playing) {
+    return;
+  }
+
+
+  const element =
+    document.createElement("div");
+
+
+  /*
+    10%で1000点
+  */
+
+  const isSpecial =
+    Math.random() < SPECIAL_CHANCE;
+
+
+  if (isSpecial) {
+
+    element.className =
+      "target specialTarget";
+
+    element.textContent =
+      "";
+
+  } else {
+
+    element.className =
+      "target";
+
+    element.textContent =
+      "100";
+  }
+
+
+  game.appendChild(
+    element
+  );
+
+
+  const target = {
+
+    element,
+
+    laneIndex,
+
+    bornTime,
+
+    dropping: false,
+
+    dropStart: 0,
+
+    dropX: 0,
+
+    hit: false,
+
+    special: isSpecial,
+
+    score:
+      isSpecial
+        ? SPECIAL_SCORE
+        : NORMAL_SCORE
+  };
+
+
+  targets.push(
+    target
+  );
+
+
+  updateOneTarget(
+    target,
+    performance.now()
+  );
+}
+
+
+/* =========================================
+   新しい的を出す
+========================================= */
+
+function updateSpawning(now) {
+
+  for (
+    let laneIndex = 0;
+    laneIndex < lanes.length;
+    laneIndex++
+  ) {
+
+    while (
+      now >= nextSpawnTimes[laneIndex]
+    ) {
+
+      createTarget(
+        laneIndex,
+        nextSpawnTimes[laneIndex]
+      );
+
+
+      nextSpawnTimes[laneIndex] +=
+        TARGET_INTERVAL;
+    }
+  }
+}
+
+
+/* =========================================
+   的更新
+========================================= */
+
+function updateTargets(now) {
+
+  const copy =
+    [...targets];
+
+
+  for (const target of copy) {
+
+    updateOneTarget(
+      target,
+      now
+    );
+  }
+}
+
+
+/* =========================================
+   的1個の動き
+========================================= */
+
+function updateOneTarget(
+  target,
+  now
+) {
+
+  if (target.hit) {
+    return;
+  }
+
+
+  const lane =
+    lanes[target.laneIndex];
+
+
+  /* =====================
+     奥 → 手前
+  ===================== */
+
+  if (!target.dropping) {
+
+    let progress =
+      (
+        now -
+        target.bornTime
+      )
+      /
+      TRAVEL_TIME;
+
+
+    if (progress < 0) {
+      progress = 0;
+    }
+
+
+    if (progress >= 1) {
+
+      progress = 1;
+
+      target.dropping =
+        true;
+
+      target.dropStart =
+        now;
+
+      target.dropX =
+        lane.frontX;
+    }
+
+
+    const x =
+      lane.backX +
+      (
+        lane.frontX -
+        lane.backX
+      ) *
+      progress;
+
+
+    const y =
+      BACK_Y +
+      (
+        FRONT_Y -
+        BACK_Y
+      ) *
+      progress;
+
+
+    /*
+      奥では小さい
+      手前では大きい
+    */
+
+    const scale =
+      .22 +
+      1.03 * progress;
+
+
+    /*
+      手前ほど前面
+    */
+
+    const zIndex =
+      Math.floor(
+        100 +
+        progress * 1000
+      );
+
+
+    target.element.style.left =
+      `${x * 100}%`;
+
+    target.element.style.top =
+      `${y * 100}%`;
+
+    target.element.style.transform =
+      `scale(${scale})`;
+
+    target.element.style.zIndex =
+      zIndex;
+
+    target.element.style.opacity =
+      "1";
+
+
+    return;
+  }
+
+
+  /* =====================
+     手前で落下
+  ===================== */
+
+  let dropProgress =
+    (
+      now -
+      target.dropStart
+    )
+    /
+    DROP_TIME;
+
+
+  if (dropProgress >= 1) {
+
+    removeTarget(
+      target
+    );
+
+    return;
+  }
+
+
+  const direction =
+    target.laneIndex < 2
+      ? -1
+      : 1;
+
+
+  const x =
+    target.dropX +
+    direction *
+    .018 *
+    dropProgress;
+
+
+  const y =
+    FRONT_Y +
+    (
+      DROP_Y -
+      FRONT_Y
+    ) *
+    dropProgress;
+
+
+  const rotation =
+    direction *
+    12 *
+    dropProgress;
+
+
+  const scale =
+    1.25 +
+    .12 *
+    dropProgress;
+
+
+  let opacity = 1;
+
+
+  if (
+    dropProgress > .65
+  ) {
+
+    opacity =
+      1 -
+      (
+        dropProgress -
+        .65
+      )
+      /
+      .35;
+  }
+
+
+  target.element.style.left =
+    `${x * 100}%`;
+
+  target.element.style.top =
+    `${y * 100}%`;
+
+  target.element.style.transform =
+    `scale(${scale}) rotate(${rotation}deg)`;
+
+  target.element.style.opacity =
+    opacity;
+
+  target.element.style.zIndex =
+    1200;
+}
+
+
+/* =========================================
+   的削除
+========================================= */
+
+function removeTarget(target) {
+
+  const index =
+    targets.indexOf(target);
+
+
+  if (index !== -1) {
+
+    targets.splice(
+      index,
+      1
+    );
+  }
+
+
+  target.element.remove();
+}
+
+
+/* =========================================
+   照準表示
+========================================= */
+
+function updateCrosshairs() {
+
+  for (const player of players) {
+
+    player.crosshair.style.left =
+      `${player.x * 100}%`;
+
+    player.crosshair.style.top =
+      `${player.y * 100}%`;
+  }
+}
+
+
+/* =========================================
+   スティック補正
+========================================= */
+
+function cleanAxis(value) {
+
+  if (
+    Math.abs(value) <
+    DEADZONE
+  ) {
+
+    return 0;
+  }
+
+
+  const sign =
+    Math.sign(value);
+
+
+  const amount =
+    (
+      Math.abs(value) -
+      DEADZONE
+    )
+    /
+    (
+      1 -
+      DEADZONE
+    );
+
+
+  return sign * amount;
+}
+
+
+/* =========================================
+   P1 = ZR側
+========================================= */
+
+function controlRightJoyCon(
+  pad,
+  deltaTime
+) {
+
+  if (!pad) {
+    return;
+  }
+
+
+  const player =
+    players[0];
+
+
+  /*
+    右Joy-Conで前に確認した
+    axes 2 / 3
+  */
+
+  const x =
+    cleanAxis(
+      pad.axes[2] ?? 0
+    );
+
+  const y =
+    cleanAxis(
+      pad.axes[3] ?? 0
+    );
+
+
+  movePlayer(
+    player,
+    x,
+    y,
+    deltaTime
+  );
+
+
+  checkFire(
+    player,
+    pad,
+    ZR_BUTTON
+  );
+}
+
+
+/* =========================================
+   P2 = ZL側
+========================================= */
+
+function controlLeftJoyCon(
+  pad,
+  deltaTime
+) {
+
+  if (!pad) {
+    return;
+  }
+
+
+  const player =
+    players[1];
+
+
+  /*
+    左Joy-Conで前に確認した
+    axes 0 / 1
+  */
+
+  const x =
+    cleanAxis(
+      pad.axes[0] ?? 0
+    );
+
+  const y =
+    cleanAxis(
+      pad.axes[1] ?? 0
+    );
+
+
+  movePlayer(
+    player,
+    x,
+    y,
+    deltaTime
+  );
+
+
+  checkFire(
+    player,
+    pad,
+    ZL_BUTTON
+  );
+}
+
+
+/* =========================================
+   照準移動
+========================================= */
+
+function movePlayer(
+  player,
+  axisX,
+  axisY,
+  deltaTime
+) {
+
+  player.x +=
+    axisX *
+    CURSOR_SPEED *
+    deltaTime /
+    game.clientWidth;
+
+
+  player.y +=
+    axisY *
+    CURSOR_SPEED *
+    deltaTime /
+    game.clientHeight;
+
+
+  player.x =
+    Math.max(
+      .02,
+      Math.min(
+        .98,
+        player.x
+      )
+    );
+
+
+  player.y =
+    Math.max(
+      .06,
+      Math.min(
+        .98,
+        player.y
+      )
+    );
+}
+
+
+/* =========================================
+   発射
+========================================= */
+
+function checkFire(
+  player,
+  pad,
+  buttonNumber
+) {
+
+  const fire =
+    !!pad.buttons[
+      buttonNumber
+    ]?.pressed;
+
+
+  /*
+    押した瞬間だけ1発
+  */
+
+  if (
+    fire &&
+    !player.oldFire
+  ) {
+
+    shoot(
+      player
+    );
+  }
+
+
+  player.oldFire =
+    fire;
+}
+
+
+/* =========================================
+   HIT判定
+========================================= */
+
+function shoot(player) {
+
+  if (!playing) {
+    return;
+  }
+
+
+  const gameRect =
+    game.getBoundingClientRect();
+
+
+  const cursorX =
+    gameRect.left +
+    player.x *
+    gameRect.width;
+
+
+  const cursorY =
+    gameRect.top +
+    player.y *
+    gameRect.height;
+
+
+  /*
+    手前の的から調べる
+  */
+
+  const targetCopy =
+    [...targets]
+
+      .filter(
+        target =>
+          !target.hit &&
+          !target.dropping
+      )
+
+      .sort(
+        (a, b) => {
+
+          const az =
+            Number(
+              a.element.style.zIndex
+            ) || 0;
+
+          const bz =
+            Number(
+              b.element.style.zIndex
+            ) || 0;
+
+          return bz - az;
+        }
+      );
+
+
+  for (
+    const target of targetCopy
+  ) {
+
+    const rect =
+      target.element
+        .getBoundingClientRect();
+
+
+    if (
+      cursorX >= rect.left &&
+      cursorX <= rect.right &&
+      cursorY >= rect.top &&
+      cursorY <= rect.bottom
+    ) {
+
+      hitTarget(
+        player,
+        target
+      );
+
+      return;
+    }
+  }
+}
+
+
+/* =========================================
+   的に命中
+========================================= */
+
+function hitTarget(
+  player,
+  target
+) {
+
+  target.hit = true;
+
+
+  player.score +=
+    target.score;
+
+
+  updateScores();
+
+
+  /*
+    効果音
+  */
+
+  if (target.special) {
+
+    playSpecialHitSound();
+
+  } else {
+
+    playNormalHitSound();
+  }
+
+
+  /*
+    +100 / +1000
+  */
+
+  const plus =
+    document.createElement(
+      "div"
+    );
+
+
+  plus.className =
+    target.special
+      ? "plusScore special"
+      : "plusScore";
+
+
+  plus.textContent =
+    `+${target.score}`;
+
+
+  const rect =
+    target.element
+      .getBoundingClientRect();
+
+
+  const gameRect =
+    game.getBoundingClientRect();
+
+
+  plus.style.left =
+    `${
+      rect.left -
+      gameRect.left +
+      rect.width / 2
+    }px`;
+
+
+  plus.style.top =
+    `${
+      rect.top -
+      gameRect.top +
+      rect.height / 2
+    }px`;
+
+
+  game.appendChild(
+    plus
+  );
+
+
+  setTimeout(
+    () => plus.remove(),
+    700
+  );
+
+
+  removeTarget(
+    target
+  );
+}
+
+
+/* =========================================
+   スコア
+========================================= */
+
+function updateScores() {
+
+  score1Text.textContent =
+    `P1 : ${players[0].score}`;
+
+  score2Text.textContent =
+    `P2 : ${players[1].score}`;
+}
+
+
+/* =========================================
+   メインループ
+========================================= */
+
+function gameLoop(now) {
+
+  if (!playing) {
+    return;
+  }
+
+
+  let deltaTime =
+    (
+      now -
+      previousFrame
+    )
+    /
+    1000;
+
+
+  previousFrame =
+    now;
+
+
+  /*
+    一瞬画面が止まった時に
+    照準がワープしないようにする
+  */
+
+  deltaTime =
+    Math.min(
+      deltaTime,
+      .05
+    );
+
+
+  const elapsed =
+    (
+      now -
+      startTime
+    )
+    /
+    1000;
+
+
+  const remaining =
+    GAME_TIME -
+    elapsed;
+
+
+  if (
+    remaining <= 0
+  ) {
+
+    timerText.textContent =
+      "0.0";
+
+    endGame();
+
+    return;
+  }
+
+
+  timerText.textContent =
+    remaining.toFixed(1);
+
+
+  const pads =
+    navigator.getGamepads
+      ? navigator.getGamepads()
+      : [];
+
+
+  /*
+    最初に登録したJoy-Conを
+    ここで使う
+  */
+
+  const rightPad =
+    rightJoyConIndex !== null
+      ? pads[rightJoyConIndex]
+      : null;
+
+
+  const leftPad =
+    leftJoyConIndex !== null
+      ? pads[leftJoyConIndex]
+      : null;
+
+
+  controlRightJoyCon(
+    rightPad,
+    deltaTime
+  );
+
+
+  controlLeftJoyCon(
+    leftPad,
+    deltaTime
+  );
+
+
+  updateCrosshairs();
+
+  updateSpawning(now);
+
+  updateTargets(now);
+
+
+  requestAnimationFrame(
+    gameLoop
+  );
+}
+
+
+/* =========================================
+   ゲーム終了
+========================================= */
+
+function endGame() {
+
+  playing = false;
+
+
+  for (const target of targets) {
+
+    target.element.remove();
+  }
+
+
+  targets = [];
+
+
+  resultP1.textContent =
+    `🩵 P1 BONUS：${players[0].score}点`;
+
+
+  resultP2.textContent =
+    `🩷 P2 BONUS：${players[1].score}点`;
+
+
+  const total =
+    players[0].score +
+    players[1].score;
+
+
+  totalScore.textContent =
+    `TOTAL：${total}点`;
+
+
+  resultScreen.style.display =
+    "flex";
+}
+
+
+/* =========================================
+   ボタン
+========================================= */
+
+startButton.addEventListener(
+  "click",
+  startGame
+);
+
+
+/*
+  もう一度の場合は
+  Joy-Con登録はそのまま使う
+*/
+
+restartButton.addEventListener(
+  "click",
+  startGame
+);
+
+
+/* =========================================
+   マウスでもP1をテスト可能
+========================================= */
+
+game.addEventListener(
+  "mousemove",
+  event => {
+
+    if (!playing) {
+      return;
+    }
+
+
+    const rect =
+      game.getBoundingClientRect();
+
+
+    players[0].x =
+      (
+        event.clientX -
+        rect.left
+      )
+      /
+      rect.width;
+
+
+    players[0].y =
+      (
+        event.clientY -
+        rect.top
+      )
+      /
+      rect.height;
+
+
+    updateCrosshairs();
+  }
+);
+
+
+game.addEventListener(
+  "mousedown",
+  () => {
+
+    if (playing) {
+
+      shoot(
+        players[0]
+      );
+    }
+  }
+);
+
+
+/* =========================================
+   キーボードテスト
+
+   SPACE = P1
+   ENTER = P2
+========================================= */
+
+window.addEventListener(
+  "keydown",
+  event => {
+
+    if (!playing) {
+      return;
+    }
+
+
+    if (
+      event.code === "Space"
+    ) {
+
+      event.preventDefault();
+
+      shoot(
+        players[0]
+      );
+    }
+
+
+    if (
+      event.code === "Enter"
+    ) {
+
+      shoot(
+        players[1]
+      );
+    }
+  }
+);
+
+
+/* =========================================
+   起動
+========================================= */
+
+updateCrosshairs();
+
+requestAnimationFrame(
+  setupControllers
+);
+
+</script>
+
+</body>
+</html>
