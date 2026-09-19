@@ -131,47 +131,31 @@ body {
   margin-left: -65px;
   margin-top: -65px;
 
-  border-radius: 50%;
+  background-image: url("target500.png");
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
 
-  background:
-    radial-gradient(
-      circle,
+  background-color: transparent;
 
-      #ffe65c 0%,
-      #ffe65c 17%,
+  border: none;
+  border-radius: 0;
 
-      #e53935 18%,
-      #e53935 35%,
+  box-shadow: none;
 
-      white 36%,
-      white 53%,
-
-      #e53935 54%,
-      #e53935 72%,
-
-      white 73%
-    );
-
-  border:
-    5px solid #55351e;
-
-  box-shadow:
-    0 4px 6px rgba(0,0,0,.5),
-    inset 0 0 8px rgba(0,0,0,.3);
-
-  color: #542715;
-
-  font-size: 25px;
-  font-weight: 900;
+  color: transparent;
 
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
 
   user-select: none;
   pointer-events: none;
 
   transform-origin: center;
+
+  filter:
+    drop-shadow(0 3px 5px rgba(0,0,0,.45));
 }
 
 
@@ -2115,7 +2099,7 @@ function createTarget(
 
 
     element.textContent =
-      "500";
+      "";
   }
 
 
